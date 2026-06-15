@@ -11,6 +11,8 @@ namespace Gpss.Runtime.Internal.Behaviours;
 internal sealed class GenerateBlockBehaviour(ILogger<GenerateBlockBehaviour> logger)
     : BlockBehaviour<GenerateBlock>
 {
+    private static readonly string BN = "GENERATE".PadRight(9);
+
     private sealed class State(long limit)
     {
         internal long GenerationCount;
@@ -32,8 +34,8 @@ internal sealed class GenerateBlockBehaviour(ILogger<GenerateBlockBehaviour> log
         context.ScheduleTransaction(tx, firstOffset);
 
         logger.LogDebug(
-            "GENERATE[{Index}]: first transaction #{TxId} scheduled at t={Time}",
-            blockContext.Index, tx.Id, firstOffset);
+            "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} → FEC t={ScheduledTime:F1}",
+            context.Clock, blockContext.Index, BN, tx.Id, firstOffset);
     }
 
     /// <inheritdoc/>
@@ -46,27 +48,26 @@ internal sealed class GenerateBlockBehaviour(ILogger<GenerateBlockBehaviour> log
         var mean = Evaluate(block.MeanInterArrivalTime);
         var limit = state.Limit;
 
-        // The arriving transaction is now officially activated in the model
         context.RecordTransactionCreated();
 
-        // Schedule the next arrival unless the generation limit has been reached
         if (limit == 0 || state.GenerationCount < limit)
         {
             var nextTx = context.CreateTransaction(blockContext.Index);
-            context.ScheduleTransaction(nextTx, context.Clock + mean);
+            var nextTime = context.Clock + mean;
+            context.ScheduleTransaction(nextTx, nextTime);
 
             logger.LogDebug(
-                "GENERATE[{Index}]: next transaction #{TxId} scheduled at t={Time}",
-                blockContext.Index, nextTx.Id, context.Clock + mean);
+                "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} activated; #{NextId} → FEC t={NextTime:F1}",
+                context.Clock, blockContext.Index, BN, tx.Id, nextTx.Id, nextTime);
+        }
+        else
+        {
+            logger.LogDebug(
+                "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} activated (generation limit reached)",
+                context.Clock, blockContext.Index, BN, tx.Id);
         }
 
-        // Move the current transaction to the next block
         tx.BlockIndex = blockContext.Index + 1;
-
-        logger.LogDebug(
-            "GENERATE[{Index}]: transaction #{TxId} moved to block {Next} at t={Clock}",
-            blockContext.Index, tx.Id, tx.BlockIndex, context.Clock);
-
         return BlockTransactionResult.Moved;
     }
 }

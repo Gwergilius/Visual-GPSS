@@ -13,6 +13,8 @@ namespace Gpss.Runtime.Internal.Behaviours;
 internal sealed class SeizeBlockBehaviour(ILogger<SeizeBlockBehaviour> logger)
     : BlockBehaviour<SeizeBlock>
 {
+    private static readonly string BN = "SEIZE".PadRight(9);
+
     /// <inheritdoc/>
     protected override void OnSimulationStart(SeizeBlock block, BlockContext blockContext, ISimulationContext context)
     {
@@ -30,15 +32,15 @@ internal sealed class SeizeBlockBehaviour(ILogger<SeizeBlockBehaviour> logger)
         {
             tx.BlockIndex = blockContext.Index + 1;
             logger.LogDebug(
-                "SEIZE[{Index}]: tx #{TxId} seized '{Facility}' at t={Clock}",
-                blockContext.Index, tx.Id, facilityName, context.Clock);
+                "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} seized '{Facility}'",
+                context.Clock, blockContext.Index, BN, tx.Id, facilityName);
             return BlockTransactionResult.Moved;
         }
 
         facility.EnqueueWaiting(tx);
         logger.LogDebug(
-            "SEIZE[{Index}]: tx #{TxId} queued for '{Facility}' (queue={Queue}) at t={Clock}",
-            blockContext.Index, tx.Id, facilityName, facility.WaitCount, context.Clock);
+            "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} waiting for '{Facility}' (q={QueueLength})",
+            context.Clock, blockContext.Index, BN, tx.Id, facilityName, facility.WaitCount);
         return BlockTransactionResult.Delayed;
     }
 }

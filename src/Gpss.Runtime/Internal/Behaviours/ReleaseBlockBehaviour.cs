@@ -12,6 +12,8 @@ namespace Gpss.Runtime.Internal.Behaviours;
 internal sealed class ReleaseBlockBehaviour(ILogger<ReleaseBlockBehaviour> logger)
     : BlockBehaviour<ReleaseBlock>
 {
+    private static readonly string BN = "RELEASE".PadRight(9);
+
     /// <inheritdoc/>
     protected override void OnSimulationStart(ReleaseBlock block, BlockContext blockContext, ISimulationContext context)
     {
@@ -29,20 +31,18 @@ internal sealed class ReleaseBlockBehaviour(ILogger<ReleaseBlockBehaviour> logge
 
         if (nextTx is not null)
         {
-            // nextTx.BlockIndex points to the SEIZE block where it was delayed;
-            // advance it past SEIZE so it continues from the block after SEIZE.
             nextTx.BlockIndex++;
             context.ScheduleTransaction(nextTx, context.Clock);
 
             logger.LogDebug(
-                "RELEASE[{Index}]: '{Facility}' transferred to tx #{NextId} at t={Clock}",
-                blockContext.Index, facilityName, nextTx.Id, context.Clock);
+                "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} releases '{Facility}'; tx #{NextId} activated",
+                context.Clock, blockContext.Index, BN, tx.Id, facilityName, nextTx.Id);
         }
         else
         {
             logger.LogDebug(
-                "RELEASE[{Index}]: '{Facility}' is now idle at t={Clock}",
-                blockContext.Index, facilityName, context.Clock);
+                "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} releases '{Facility}'",
+                context.Clock, blockContext.Index, BN, tx.Id, facilityName);
         }
 
         tx.BlockIndex = blockContext.Index + 1;

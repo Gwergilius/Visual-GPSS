@@ -11,6 +11,8 @@ namespace Gpss.Runtime.Internal.Behaviours;
 internal sealed class DepartBlockBehaviour(ILogger<DepartBlockBehaviour> logger)
     : BlockBehaviour<DepartBlock>
 {
+    private static readonly string BN = "DEPART".PadRight(9);
+
     /// <inheritdoc/>
     protected override void OnSimulationStart(DepartBlock block, BlockContext blockContext, ISimulationContext context)
     {
@@ -26,8 +28,8 @@ internal sealed class DepartBlockBehaviour(ILogger<DepartBlockBehaviour> logger)
         queue.Depart(tx, context.Clock);
 
         logger.LogDebug(
-            "DEPART[{Index}]: tx #{TxId} left '{Queue}' (count={Count}) at t={Clock}",
-            blockContext.Index, tx.Id, queueName, queue.CurrentCount, context.Clock);
+            "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} left '{QueueName}'",
+            context.Clock, blockContext.Index, BN, tx.Id, queueName);
 
         tx.BlockIndex = blockContext.Index + 1;
         return BlockTransactionResult.Moved;

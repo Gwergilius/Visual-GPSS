@@ -11,6 +11,8 @@ namespace Gpss.Runtime.Internal.Behaviours;
 internal sealed class QueueBlockBehaviour(ILogger<QueueBlockBehaviour> logger)
     : BlockBehaviour<QueueBlock>
 {
+    private static readonly string BN = "QUEUE".PadRight(9);
+
     /// <inheritdoc/>
     protected override void OnSimulationStart(QueueBlock block, BlockContext blockContext, ISimulationContext context)
     {
@@ -26,8 +28,8 @@ internal sealed class QueueBlockBehaviour(ILogger<QueueBlockBehaviour> logger)
         queue.Enter(tx, context.Clock);
 
         logger.LogDebug(
-            "QUEUE[{Index}]: tx #{TxId} entered '{Queue}' (count={Count}) at t={Clock}",
-            blockContext.Index, tx.Id, queueName, queue.CurrentCount, context.Clock);
+            "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} entered '{QueueName}'",
+            context.Clock, blockContext.Index, BN, tx.Id, queueName);
 
         tx.BlockIndex = blockContext.Index + 1;
         return BlockTransactionResult.Moved;

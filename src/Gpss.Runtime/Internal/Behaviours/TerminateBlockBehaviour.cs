@@ -11,10 +11,12 @@ namespace Gpss.Runtime.Internal.Behaviours;
 internal sealed class TerminateBlockBehaviour(ILogger<TerminateBlockBehaviour> logger)
     : BlockBehaviour<TerminateBlock>
 {
+    private static readonly string BN = "TERMINATE".PadRight(9);
+
     /// <inheritdoc/>
     protected override void OnSimulationStart(TerminateBlock block, BlockContext blockContext, ISimulationContext context)
     {
-        // No initialisation needed for TERMINATE
+        // No initialisation needed
     }
 
     /// <inheritdoc/>
@@ -25,8 +27,8 @@ internal sealed class TerminateBlockBehaviour(ILogger<TerminateBlockBehaviour> l
         context.DecrementTerminationCounter(decrement);
 
         logger.LogDebug(
-            "TERMINATE[{Index}]: transaction #{TxId} destroyed, counter decremented by {Decrement} at t={Clock}",
-            blockContext.Index, tx.Id, decrement, context.Clock);
+            "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} destroyed (−{Decrement})",
+            context.Clock, blockContext.Index, BN, tx.Id, decrement);
 
         return BlockTransactionResult.Destroyed;
     }
