@@ -46,4 +46,4 @@ Recreate and modernize the GPSS ecosystem by delivering:
 - Add tests for every new runtime behavior.
 - Document unsupported GPSS features explicitly.
 - Prefer small, reviewable increments over large refactors.
-- Every type and member that is not `private` must have XML documentation (`<summary>` at minimum). This covers `public`, `protected`, `internal`, `protected internal`, and `private protected` types and members. Use `<param>`, `<returns>`, `<remarks>`, and `<see cref>` where they add clarity. One-line summaries are fine; avoid padding.
+- Every type and member that is not `private` must have XML documentation (`<summary>` at minimum). This covers `public`, `protected`, `internal`, `protected internal`, and `private protected` types and members. `internal` members are included because they may be exposed to other assemblies via `[InternalsVisibleTo]` (e.g., test projects), and because XML documentation is a general best practice regardless of visibility. Use `<param>`, `<returns>`, `<remarks>`, and `<see cref>` where they add clarity. One-line summaries are fine; avoid padding.
