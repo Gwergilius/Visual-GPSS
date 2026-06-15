@@ -7,6 +7,7 @@
     </Folder>
     <Folder Name="/tests/">
         <Project Path="tests/Gpss.Model.Tests/Gpss.Model.Tests.csproj" />
+        <Project Path="tests/Gpss.Runtime.Tests/Gpss.Runtime.Tests.csproj" />
     </Folder>
     <!-- Solution Items -->
 <!--
