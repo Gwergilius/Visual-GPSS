@@ -155,7 +155,7 @@ Start with the Tutorial Chapter 1 barber shop, progress through the five simple 
 3. Mirror essential references metadata (not copyrighted full text):
 - title, author, year, URL, access date, dialect relevance, reliability score.
 
-4. Build a GPSS block compatibility matrix:
+4. ~~Build a GPSS block compatibility matrix~~ ✓ Done — see [docs/block-compatibility-matrix.md]:
 - Rows: GPSS blocks/commands.
 - Columns: GPSS/360, GPSS World, GPSS/H, Visual-GPSS target support.
 
