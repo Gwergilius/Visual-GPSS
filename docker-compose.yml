@@ -1,0 +1,20 @@
+# Local development infrastructure
+# Usage: docker compose up -d
+# Seq UI:        http://localhost:8081
+# Seq ingestion: http://localhost:5341  (used by Serilog)
+
+services:
+  seq:
+    image: datalust/seq:latest
+    container_name: gpss-seq
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "5341:5341"   # Serilog HTTP ingestion endpoint
+      - "8081:80"     # Seq web UI
+    volumes:
+      - seq-data:/data
+    restart: unless-stopped
+
+volumes:
+  seq-data:
