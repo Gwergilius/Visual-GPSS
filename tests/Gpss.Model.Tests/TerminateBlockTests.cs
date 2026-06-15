@@ -1,17 +1,17 @@
 using Gpss.Model.Blocks;
 using Gpss.Model.Expressions;
+using Shouldly;
 
 namespace Gpss.Model.Tests;
 
 public sealed class TerminateBlockTests
 {
-    [Fact]
-    public void TerminateBlock_WithDecrementCount_CountIsSet()
+    [Theory, InlineData(1)]
+    public void TerminateBlock_WithDecrementCount_CountIsSet(int count)
     {
-        var block = new TerminateBlock(new IntegerExpression(1));
+        var block = new TerminateBlock(new IntegerExpression(count));
 
-        var count = Assert.IsType<IntegerExpression>(block.DecrementCount);
-        Assert.Equal(1, count.Value);
+        block.DecrementCount.ShouldBeOfType<IntegerExpression>().Value.ShouldBe(count);
     }
 
     [Fact]
@@ -20,40 +20,41 @@ public sealed class TerminateBlockTests
         // TERMINATE with no operand destroys the transaction without decrementing the counter
         var block = new TerminateBlock();
 
-        Assert.Null(block.DecrementCount);
+        block.DecrementCount.ShouldBeNull();
     }
 
-    [Fact]
-    public void TerminateBlock_WithLabel_LabelIsPreserved()
+    [Theory, InlineData("TERM1", 1)]
+    public void TerminateBlock_WithLabel_LabelIsPreserved(string label, int count)
     {
-        var block = new TerminateBlock(new IntegerExpression(1)) { Label = "TERM1" };
+        var block = new TerminateBlock(new IntegerExpression(count)) { Label = label };
 
-        Assert.Equal("TERM1", block.Label);
+        block.Label.ShouldBe(label);
     }
 
-    [Fact]
-    public void TerminateBlock_RecordEquality_SameOperandsAreEqual()
+    [Theory, InlineData(1)]
+    public void TerminateBlock_RecordEquality_SameOperandsAreEqual(int count)
     {
-        var a = new TerminateBlock(new IntegerExpression(1));
-        var b = new TerminateBlock(new IntegerExpression(1));
+        var a = new TerminateBlock(new IntegerExpression(count));
+        var b = new TerminateBlock(new IntegerExpression(count));
 
-        Assert.Equal(a, b);
+        a.ShouldBe(b);
     }
 
-    [Fact]
-    public void TerminateBlock_RecordEquality_DifferentDecrementCountsAreNotEqual()
+    [Theory, InlineData(1, 2)]
+    public void TerminateBlock_RecordEquality_DifferentDecrementCountsAreNotEqual(int count1, int count2)
     {
-        var a = new TerminateBlock(new IntegerExpression(1));
-        var b = new TerminateBlock(new IntegerExpression(2));
+        count1.ShouldNotBe(count2, "PRE: Values should be different for this test");
+        var a = new TerminateBlock(new IntegerExpression(count1));
+        var b = new TerminateBlock(new IntegerExpression(count2));
 
-        Assert.NotEqual(a, b);
+        a.ShouldNotBe(b);
     }
 
-    [Fact]
-    public void TerminateBlock_IsAssignableToGpssBlock()
+    [Theory, InlineData(1)]
+    public void TerminateBlock_IsAssignableToGpssBlock(int count)
     {
-        GpssBlock block = new TerminateBlock(new IntegerExpression(1));
+        GpssBlock block = new TerminateBlock(new IntegerExpression(count));
 
-        Assert.IsAssignableFrom<GpssBlock>(block);
+        block.ShouldBeAssignableTo<GpssBlock>();
     }
 }

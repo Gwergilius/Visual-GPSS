@@ -1,78 +1,78 @@
 using Gpss.Model.Blocks;
 using Gpss.Model.Expressions;
+using Shouldly;
 
 namespace Gpss.Model.Tests;
 
 public sealed class GenerateBlockTests
 {
-    [Fact]
-    public void GenerateBlock_RequiredOperand_MeanInterArrivalTimeIsSet()
+    [Theory, InlineData(10)]
+    public void GenerateBlock_RequiredOperand_MeanInterArrivalTimeIsSet(int value)
     {
-        var block = new GenerateBlock(new IntegerExpression(10));
+        var block = new GenerateBlock(new IntegerExpression(value));
 
-        var mean = Assert.IsType<IntegerExpression>(block.MeanInterArrivalTime);
-        Assert.Equal(10, mean.Value);
+        block.MeanInterArrivalTime.ShouldBeOfType<IntegerExpression>().Value.ShouldBe(value);
     }
 
-    [Fact]
-    public void GenerateBlock_OptionalOperands_DefaultToNull()
+    [Theory, InlineData(10)]
+    public void GenerateBlock_OptionalOperands_DefaultToNull(int value)
     {
-        var block = new GenerateBlock(new IntegerExpression(10));
+        var block = new GenerateBlock(new IntegerExpression(value));
 
-        Assert.Null(block.Spread);
-        Assert.Null(block.FirstTransactionOffset);
-        Assert.Null(block.GenerationLimit);
-        Assert.Null(block.Priority);
+        block.Spread.ShouldBeNull();
+        block.FirstTransactionOffset.ShouldBeNull();
+        block.GenerationLimit.ShouldBeNull();
+        block.Priority.ShouldBeNull();
     }
 
-    [Fact]
-    public void GenerateBlock_WithLabel_LabelIsPreserved()
+    [Theory, InlineData("GEN1", 10)]
+    public void GenerateBlock_WithLabel_LabelIsPreserved(string label, int value)
     {
-        var block = new GenerateBlock(new IntegerExpression(10)) { Label = "GEN1" };
+        var block = new GenerateBlock(new IntegerExpression(value)) { Label = label };
 
-        Assert.Equal("GEN1", block.Label);
+        block.Label.ShouldBe(label);
     }
 
-    [Fact]
-    public void GenerateBlock_WithoutLabel_LabelIsNull()
+    [Theory, InlineData(10)]
+    public void GenerateBlock_WithoutLabel_LabelIsNull(int value)
     {
-        var block = new GenerateBlock(new IntegerExpression(10));
+        var block = new GenerateBlock(new IntegerExpression(value));
 
-        Assert.Null(block.Label);
+        block.Label.ShouldBeNull();
     }
 
-    [Fact]
-    public void GenerateBlock_WithSpread_SpreadIsSet()
+    [Theory, InlineData(10, 3)]
+    public void GenerateBlock_WithSpread_SpreadIsSet(int value, int spread)
     {
-        var block = new GenerateBlock(new IntegerExpression(10), Spread: new IntegerExpression(3));
+        var block = new GenerateBlock(new IntegerExpression(value), Spread: new IntegerExpression(spread));
 
-        var spread = Assert.IsType<IntegerExpression>(block.Spread);
-        Assert.Equal(3, spread.Value);
+        block.Spread.ShouldBeOfType<IntegerExpression>().Value.ShouldBe(spread);
     }
 
-    [Fact]
-    public void GenerateBlock_RecordEquality_SameOperandsAreEqual()
+    [Theory, InlineData(10)]
+    public void GenerateBlock_RecordEquality_SameOperandsAreEqual(int value)
     {
-        var a = new GenerateBlock(new IntegerExpression(10));
-        var b = new GenerateBlock(new IntegerExpression(10));
+        var a = new GenerateBlock(new IntegerExpression(value));
+        var b = new GenerateBlock(new IntegerExpression(value));
 
-        Assert.Equal(a, b);
+        a.ShouldBe(b);
     }
 
-    [Fact]
-    public void GenerateBlock_RecordEquality_DifferentMeanAreNotEqual()
+    [Theory, InlineData(10, 20)]
+    public void GenerateBlock_RecordEquality_DifferentMeanAreNotEqual(int value1, int value2)
     {
-        var a = new GenerateBlock(new IntegerExpression(10));
-        var b = new GenerateBlock(new IntegerExpression(20));
+        value1.ShouldNotBe(value2, "PRE: Values should be different for this test");
+        var a = new GenerateBlock(new IntegerExpression(value1));
+        var b = new GenerateBlock(new IntegerExpression(value2));
 
-        Assert.NotEqual(a, b);
+        a.ShouldNotBe(b);
     }
 
-    [Fact]
-    public void GenerateBlock_IsAssignableToGpssBlock()
+    [Theory, InlineData(10)]
+    public void GenerateBlock_IsAssignableToGpssBlock(int value)
     {
-        GpssBlock block = new GenerateBlock(new IntegerExpression(10));
+        GpssBlock block = new GenerateBlock(new IntegerExpression(value));
 
-        Assert.IsAssignableFrom<GpssBlock>(block);
+        block.ShouldBeAssignableTo<GpssBlock>();
     }
 }

@@ -1,39 +1,41 @@
 using Gpss.Model;
 using Gpss.Model.Blocks;
 using Gpss.Model.Expressions;
+using Shouldly;
 
 namespace Gpss.Model.Tests;
 
 public sealed class GpssProgramTests
 {
-    [Fact]
-    public void Program_WithGenerateAndTerminate_ContainsBothBlocksInOrder()
+    [Theory, InlineData(10, 1)]
+    public void Program_WithGenerateAndTerminate_ContainsBothBlocksInOrder(int meanArrival, int decrementCount)
     {
         var program = new GpssProgram([
-            new GenerateBlock(new IntegerExpression(10)),
-            new TerminateBlock(new IntegerExpression(1))
+            new GenerateBlock(new IntegerExpression(meanArrival)),
+            new TerminateBlock(new IntegerExpression(decrementCount))
         ]);
 
-        Assert.Equal(2, program.Blocks.Count);
-        Assert.IsType<GenerateBlock>(program.Blocks[0]);
-        Assert.IsType<TerminateBlock>(program.Blocks[1]);
+        program.Blocks.Count.ShouldBe(2);
+        program.Blocks[0].ShouldBeOfType<GenerateBlock>();
+        program.Blocks[1].ShouldBeOfType<TerminateBlock>();
     }
 
-    [Fact]
-    public void Program_RecordEquality_TwoProgramsWithSameBlocksAreEqual()
+    [Theory, InlineData(10)]
+    public void Program_RecordEquality_TwoProgramsWithSameBlocksAreEqual(int meanArrival)
     {
-        var a = new GpssProgram([new GenerateBlock(new IntegerExpression(10))]);
-        var b = new GpssProgram([new GenerateBlock(new IntegerExpression(10))]);
+        var a = new GpssProgram([new GenerateBlock(new IntegerExpression(meanArrival))]);
+        var b = new GpssProgram([new GenerateBlock(new IntegerExpression(meanArrival))]);
 
-        Assert.Equal(a, b);
+        a.ShouldBe(b);
     }
 
-    [Fact]
-    public void Program_RecordEquality_ProgramsWithDifferentBlocksAreNotEqual()
+    [Theory, InlineData(10, 99)]
+    public void Program_RecordEquality_ProgramsWithDifferentBlocksAreNotEqual(int meanA, int meanB)
     {
-        var a = new GpssProgram([new GenerateBlock(new IntegerExpression(10))]);
-        var b = new GpssProgram([new GenerateBlock(new IntegerExpression(99))]);
+        meanA.ShouldNotBe(meanB);
+        var a = new GpssProgram([new GenerateBlock(new IntegerExpression(meanA))]);
+        var b = new GpssProgram([new GenerateBlock(new IntegerExpression(meanB))]);
 
-        Assert.NotEqual(a, b);
+        a.ShouldNotBe(b);
     }
 }
