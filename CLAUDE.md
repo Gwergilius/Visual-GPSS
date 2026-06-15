@@ -16,6 +16,10 @@ Recreate and modernize the GPSS ecosystem by delivering:
 - Project documentation: English.
 - Source code, identifiers, and code comments: English.
 
+## Repository Standards
+
+- Every repository must have a `.gitattributes` file that normalizes all text files to LF (`* text=auto eol=lf`). Windows scripts (`.bat`, `.cmd`, `.ps1`) are the only exception and use CRLF. Binary files must be marked `binary`.
+
 ## Runtime and Language Baseline
 
 - Target the latest development baseline.
