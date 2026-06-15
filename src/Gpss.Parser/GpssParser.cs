@@ -15,14 +15,14 @@ namespace Gpss.Parser;
 /// </code>
 /// Lines that are empty, whitespace-only, or begin with <c>;</c> (inline) or <c>*</c> (full-line) are ignored.
 /// The <c>END</c> statement terminates parsing; further lines are not processed.
-/// Currently recognised block names: <c>GENERATE</c>, <c>TERMINATE</c>, <c>SEIZE</c>, <c>RELEASE</c>.
+/// Currently recognised block names: <c>GENERATE</c>, <c>TERMINATE</c>, <c>SEIZE</c>, <c>RELEASE</c>, <c>QUEUE</c>, <c>DEPART</c>.
 /// </remarks>
 public sealed class GpssParser
 {
     private static readonly IReadOnlySet<string> KnownBlockNames =
         new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "GENERATE", "TERMINATE", "SEIZE", "RELEASE"
+            "GENERATE", "TERMINATE", "SEIZE", "RELEASE", "QUEUE", "DEPART"
         };
 
     /// <summary>
@@ -130,6 +130,10 @@ public sealed class GpssParser
                                name => new SeizeBlock(new SymbolExpression(name))),
             "RELEASE"   => BuildFacilityBlock<ReleaseBlock>(label, operands, lineNumber, "RELEASE", diagnostics,
                                name => new ReleaseBlock(new SymbolExpression(name))),
+            "QUEUE"     => BuildFacilityBlock<QueueBlock>(label, operands, lineNumber, "QUEUE", diagnostics,
+                               name => new QueueBlock(new SymbolExpression(name))),
+            "DEPART"    => BuildFacilityBlock<DepartBlock>(label, operands, lineNumber, "DEPART", diagnostics,
+                               name => new DepartBlock(new SymbolExpression(name))),
             _ => null
         };
 

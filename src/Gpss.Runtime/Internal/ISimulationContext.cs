@@ -45,4 +45,11 @@ internal interface ISimulationContext
     /// </summary>
     /// <param name="name">Facility identifier as written in the GPSS source.</param>
     Facility GetOrCreateFacility(string name);
+
+    /// <summary>
+    /// Returns the named <see cref="GpssQueue"/>, creating it if it does not yet exist.
+    /// Lookup is case-insensitive, matching GPSS convention.
+    /// </summary>
+    /// <param name="name">Queue identifier as written in the GPSS source.</param>
+    GpssQueue GetOrCreateQueue(string name);
 }

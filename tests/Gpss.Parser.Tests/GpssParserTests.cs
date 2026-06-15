@@ -105,6 +105,30 @@ public sealed class GpssParserTests
     }
 
     // -------------------------------------------------------------------------
+    // QUEUE and DEPART blocks
+    // -------------------------------------------------------------------------
+
+    [Theory, InlineData("Barber")]
+    public void Parse_Queue_ProducesQueueBlockWithSymbolOperand(string queueName)
+    {
+        var result = Parser.Parse($"QUEUE {queueName}");
+
+        result.Success.ShouldBeTrue();
+        result.Program!.Blocks[0].ShouldBeOfType<QueueBlock>()
+            .QueueName.ShouldBeOfType<SymbolExpression>().Name.ShouldBe(queueName);
+    }
+
+    [Theory, InlineData("Barber")]
+    public void Parse_Depart_ProducesDepartBlockWithSymbolOperand(string queueName)
+    {
+        var result = Parser.Parse($"DEPART {queueName}");
+
+        result.Success.ShouldBeTrue();
+        result.Program!.Blocks[0].ShouldBeOfType<DepartBlock>()
+            .QueueName.ShouldBeOfType<SymbolExpression>().Name.ShouldBe(queueName);
+    }
+
+    // -------------------------------------------------------------------------
     // SEIZE and RELEASE blocks
     // -------------------------------------------------------------------------
 

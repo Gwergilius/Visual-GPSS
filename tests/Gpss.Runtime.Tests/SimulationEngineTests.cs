@@ -136,6 +136,31 @@ public sealed class SimulationEngineTests
     }
 
     // -------------------------------------------------------------------------
+    // QUEUE / DEPART (statistical blocks — no flow delay)
+    // -------------------------------------------------------------------------
+
+    [Theory]
+    [InlineData(1, 10.0)]
+    [InlineData(3, 30.0)]
+    public void Run_QueueDepart_TransactionsFlowThroughWithoutDelay(
+        long terminationCount, double expectedEndTime)
+    {
+        // QUEUE and DEPART are statistical-only; the transaction must not be delayed
+        var program = new GpssProgram([
+            new GenerateBlock(new IntegerExpression(10)),
+            new QueueBlock(new SymbolExpression("Server")),
+            new DepartBlock(new SymbolExpression("Server")),
+            new TerminateBlock(new IntegerExpression(1))
+        ]);
+
+        var result = CreateEngine(terminationCount).Run(program);
+
+        result.Success.ShouldBeTrue();
+        result.Statistics.SimulationEndTime.ShouldBe(expectedEndTime);
+        result.Statistics.TotalTransactionsTerminated.ShouldBe(terminationCount);
+    }
+
+    // -------------------------------------------------------------------------
     // SEIZE / RELEASE
     // -------------------------------------------------------------------------
 
