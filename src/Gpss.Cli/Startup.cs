@@ -1,4 +1,5 @@
 using Gpss.Contracts;
+using Gpss.Parser;
 using Gpss.Runtime;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,7 @@ public static class Startup
     public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<SimulationOptions>(configuration.GetSection("Simulation"));
+        services.AddSingleton<GpssParser>();
         services.AddGpssRuntime();
     }
 }

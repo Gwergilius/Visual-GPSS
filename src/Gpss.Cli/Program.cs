@@ -1,7 +1,5 @@
 using Gpss.Cli;
-using Gpss.Model;
-using Gpss.Model.Blocks;
-using Gpss.Model.Expressions;
+using Gpss.Parser;
 using Gpss.Runtime;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -12,16 +10,23 @@ var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((ctx, services) => Startup.ConfigureServices(services, ctx.Configuration))
     .Build();
 
-// Temporary demo: hardcoded GENERATE 10 / TERMINATE 1 model
-// TerminationCount is read from appsettings.json → "Simulation:TerminationCount"
+const string source = """
+    GENERATE 10
+    TERMINATE 1
+    """;
+
+var parser = host.Services.GetRequiredService<GpssParser>();
+var parseResult = parser.Parse(source);
+
+if (!parseResult.Success)
+{
+    foreach (var d in parseResult.Diagnostics)
+        Console.Error.WriteLine($"[{d.Severity}] {d.Message}");
+    return;
+}
+
 var engine = host.Services.GetRequiredService<SimulationEngine>();
-
-var program = new GpssProgram([
-    new GenerateBlock(new IntegerExpression(10)),
-    new TerminateBlock(new IntegerExpression(1))
-]);
-
-var result = engine.Run(program);
+var result = engine.Run(parseResult.Program!);
 
 Console.WriteLine();
 Console.WriteLine($"Success          : {result.Success}");

@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Gpss.Contracts\Gpss.Contracts.csproj" />
     <ProjectReference Include="..\Gpss.Runtime\Gpss.Runtime.csproj" />
+    <ProjectReference Include="..\Gpss.Parser\Gpss.Parser.csproj" />
   </ItemGroup>
 
   <ItemGroup>
