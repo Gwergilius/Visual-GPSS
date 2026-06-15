@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Gpss.Runtime.Tests/Gpss.Runtime.Tests.csproj" />
+    <Project Path="src/Gpss.Runtime/Gpss.Runtime.csproj" />
+    <Project Path="src/Gpss.Visual/Gpss.Visual.csproj" />
+  </Folder>
+</Solution>
