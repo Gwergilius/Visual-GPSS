@@ -1,0 +1,49 @@
+graph TD
+    subgraph inputs["Inputs"]
+        SRC["GPSS Source\n(text file)"]
+        VMODEL["Visual Model\n(editor graph)"]
+    end
+
+    subgraph core["Core Components"]
+        CONTRACTS["Gpss.Contracts\nInterfaces · DTOs · Enums"]
+        PARSER["Gpss.Parser\nLexer + Parser"]
+        MODEL["Gpss.Model\nAST · Semantic Nodes · Validation"]
+        RUNTIME["Gpss.Runtime\nSimulation Engine"]
+    end
+
+    subgraph hosts["Hosts"]
+        CLI["Gpss.Cli\nCLI Host"]
+        EDITOR["Gpss.Editor\nVisual Editor\nDesktop · Web · Mobile"]
+    end
+
+    subgraph outputs["Outputs"]
+        RESULTS["Simulation Results\nReport · Events · Statistics"]
+    end
+
+    SRC -->|text| PARSER
+    PARSER -->|AST| MODEL
+    MODEL -->|validated model| RUNTIME
+    RUNTIME -->|results| RESULTS
+
+    VMODEL -->|graph| EDITOR
+    EDITOR -->|model| RUNTIME
+    EDITOR <-->|round-trip| MODEL
+
+    CLI -->|invokes| RUNTIME
+    CLI -->|reads| RESULTS
+
+    CONTRACTS -.->|contracts| PARSER
+    CONTRACTS -.->|contracts| MODEL
+    CONTRACTS -.->|contracts| RUNTIME
+    CONTRACTS -.->|contracts| CLI
+    CONTRACTS -.->|contracts| EDITOR
+
+    classDef contractsStyle fill:#f5f0e8,stroke:#b8a87a,color:#4a3f20
+    classDef coreStyle fill:#e8f0f5,stroke:#5a8ab8,color:#1a3a5c
+    classDef hostStyle fill:#e8f5e8,stroke:#5ab870,color:#1a4a1a
+    classDef ioStyle fill:#f5e8f0,stroke:#b85a8a,color:#4a1a3a
+
+    class CONTRACTS contractsStyle
+    class PARSER,MODEL,RUNTIME coreStyle
+    class CLI,EDITOR hostStyle
+    class SRC,VMODEL,RESULTS ioStyle

@@ -1,0 +1,70 @@
+@startuml component-architecture
+!theme plain
+skinparam componentStyle rectangle
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 12
+skinparam ArrowColor #555555
+skinparam ArrowThickness 1.5
+
+skinparam component {
+    BackgroundColor<<contracts>> #f5f0e8
+    BorderColor<<contracts>>     #b8a87a
+    FontColor<<contracts>>       #4a3f20
+
+    BackgroundColor<<core>>      #e8f0f5
+    BorderColor<<core>>          #5a8ab8
+    FontColor<<core>>            #1a3a5c
+
+    BackgroundColor<<host>>      #e8f5e8
+    BorderColor<<host>>          #5ab870
+    FontColor<<host>>            #1a4a1a
+
+    BackgroundColor<<io>>        #f5e8f0
+    BorderColor<<io>>            #b85a8a
+    FontColor<<io>>              #4a1a3a
+}
+
+package "Inputs" {
+    component "GPSS Source\n(text file)"  <<io>>     as SRC
+    component "Visual Model\n(editor graph)" <<io>>  as VMODEL
+}
+
+package "Core Components" {
+    component "Gpss.Contracts\nInterfaces · DTOs · Enums" <<contracts>> as CONTRACTS
+
+    component "Gpss.Parser\nLexer + Parser"                <<core>> as PARSER
+    component "Gpss.Model\nAST · Semantic Nodes · Validation" <<core>> as MODEL
+    component "Gpss.Runtime\nSimulation Engine"            <<core>> as RUNTIME
+}
+
+package "Hosts" {
+    component "Gpss.Cli\nCLI Host"                        <<host>> as CLI
+    component "Gpss.Editor\nVisual Editor\nDesktop · Web · Mobile" <<host>> as EDITOR
+}
+
+package "Outputs" {
+    component "Simulation Results\nReport · Events · Statistics" <<io>> as RESULTS
+}
+
+' Data flow
+SRC     -right-> PARSER  : text
+PARSER  -right-> MODEL   : AST
+MODEL   -right-> RUNTIME : validated model
+RUNTIME -right-> RESULTS : results
+
+' Host connections
+CLI    -up-> RUNTIME  : invokes
+CLI    -up-> RESULTS  : reads
+EDITOR -up-> RUNTIME  : model
+EDITOR <--> MODEL     : round-trip
+
+VMODEL -right-> EDITOR : graph
+
+' Contracts (dashed)
+CONTRACTS ..> PARSER  : contracts
+CONTRACTS ..> MODEL   : contracts
+CONTRACTS ..> RUNTIME : contracts
+CONTRACTS ..> CLI     : contracts
+CONTRACTS ..> EDITOR  : contracts
+
+@enduml
