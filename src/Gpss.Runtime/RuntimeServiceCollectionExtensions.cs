@@ -1,6 +1,8 @@
+using Gpss.Contracts;
 using Gpss.Runtime.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Gpss.Runtime;
 
@@ -31,6 +33,7 @@ public static class RuntimeServiceCollectionExtensions
         services.AddSingleton(sp => new BlockBehaviourRegistry(sp.GetServices<IBlockBehaviour>()));
         services.AddSingleton(sp => new SimulationEngine(
             sp.GetRequiredService<BlockBehaviourRegistry>(),
+            sp.GetRequiredService<IOptions<SimulationOptions>>(),
             sp.GetRequiredService<ILogger<SimulationEngine>>()));
 
         return services;

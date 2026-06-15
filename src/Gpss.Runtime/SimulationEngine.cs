@@ -1,8 +1,8 @@
 using Gpss.Contracts;
 using Gpss.Model;
 using Gpss.Runtime.Internal;
-using Gpss.Runtime.Internal.Behaviours;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Gpss.Runtime;
 
@@ -10,7 +10,8 @@ namespace Gpss.Runtime;
 /// Orchestrates a discrete-event GPSS simulation as a Mediator:
 /// coordinates <see cref="IBlockBehaviour"/> implementations, the Future Events Chain,
 /// and the simulation clock without coupling any of them directly to each other.
-/// The engine is stateless; each call to <see cref="Run"/> is fully independent.
+/// Simulation parameters are supplied via <see cref="IOptions{TOptions}"/> of
+/// <see cref="SimulationOptions"/>, configured through the DI container.
 /// </summary>
 /// <remarks>
 /// The constructor is <see langword="internal"/> because it takes internal types.
@@ -19,33 +20,45 @@ namespace Gpss.Runtime;
 public sealed class SimulationEngine
 {
     private readonly BlockBehaviourRegistry _registry;
+    private readonly IOptions<SimulationOptions> _options;
     private readonly ILogger<SimulationEngine> _logger;
 
-    /// <summary>Initialises the engine. Use <see cref="RuntimeServiceCollectionExtensions.AddGpssRuntime"/> to obtain instances via DI.</summary>
+    /// <summary>
+    /// Initialises the engine. Use <see cref="RuntimeServiceCollectionExtensions.AddGpssRuntime"/>
+    /// to obtain instances via DI.
+    /// </summary>
     /// <param name="registry">Registry mapping block types to their behaviours.</param>
+    /// <param name="options">Simulation run parameters resolved from the DI container.</param>
     /// <param name="logger">Logger for simulation lifecycle events.</param>
-    internal SimulationEngine(BlockBehaviourRegistry registry, ILogger<SimulationEngine> logger)
+    internal SimulationEngine(
+        BlockBehaviourRegistry registry,
+        IOptions<SimulationOptions> options,
+        ILogger<SimulationEngine> logger)
     {
         _registry = registry;
+        _options = options;
         _logger = logger;
     }
 
     /// <summary>
     /// Executes <paramref name="program"/> as a discrete-event simulation and returns the result.
+    /// Run parameters (termination count, random seed, event limit) are read from the
+    /// <see cref="SimulationOptions"/> instance configured in the DI container.
     /// </summary>
     /// <remarks>
     /// The simulation runs until one of the following conditions is met:
     /// <list type="bullet">
     ///   <item>The termination counter reaches zero (normal end).</item>
-    ///   <item>The Future Events Chain is exhausted with no termination.</item>
+    ///   <item>The Future Events Chain is exhausted before the counter reaches zero.</item>
     ///   <item><see cref="SimulationOptions.MaxEvents"/> is exceeded (safety limit).</item>
     /// </list>
     /// </remarks>
     /// <param name="program">The parsed GPSS model to execute.</param>
-    /// <param name="options">Run-time parameters including the initial termination count.</param>
     /// <returns>A <see cref="SimulationResult"/> describing the outcome and statistics.</returns>
-    public SimulationResult Run(GpssProgram program, SimulationOptions options)
+    public SimulationResult Run(GpssProgram program)
     {
+        var options = _options.Value;
+
         if (options.TerminationCount <= 0)
             return BuildResult(success: true, clock: 0.0, created: 0, terminated: 0, []);
 

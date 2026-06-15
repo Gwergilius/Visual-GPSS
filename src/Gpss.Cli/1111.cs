@@ -1,5 +1,4 @@
 using Gpss.Cli;
-using Gpss.Contracts;
 using Gpss.Model;
 using Gpss.Model.Blocks;
 using Gpss.Model.Expressions;
@@ -13,7 +12,8 @@ var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((ctx, services) => Startup.ConfigureServices(services, ctx.Configuration))
     .Build();
 
-// Temporary demo: hardcoded GENERATE 10 / TERMINATE 1 model, 5 transactions
+// Temporary demo: hardcoded GENERATE 10 / TERMINATE 1 model
+// TerminationCount is read from appsettings.json → "Simulation:TerminationCount"
 var engine = host.Services.GetRequiredService<SimulationEngine>();
 
 var program = new GpssProgram([
@@ -21,8 +21,7 @@ var program = new GpssProgram([
     new TerminateBlock(new IntegerExpression(1))
 ]);
 
-var options = new SimulationOptions(TerminationCount: 5);
-var result = engine.Run(program, options);
+var result = engine.Run(program);
 
 Console.WriteLine();
 Console.WriteLine($"Success          : {result.Success}");

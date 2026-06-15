@@ -1,3 +1,4 @@
+using Gpss.Contracts;
 using Gpss.Runtime;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,7 @@ public static class Startup
     /// <param name="configuration">The host configuration (appsettings.json, environment variables, etc.).</param>
     public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
+        services.Configure<SimulationOptions>(configuration.GetSection("Simulation"));
         services.AddGpssRuntime();
     }
 }

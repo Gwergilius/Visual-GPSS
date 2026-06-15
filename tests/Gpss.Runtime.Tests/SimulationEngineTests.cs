@@ -11,10 +11,17 @@ namespace Gpss.Runtime.Tests;
 
 public sealed class SimulationEngineTests
 {
-    private static SimulationEngine CreateEngine()
+    private static SimulationEngine CreateEngine(
+        long terminationCount = 1,
+        long? maxEvents = null)
     {
         var services = new ServiceCollection()
             .AddLogging(b => b.SetMinimumLevel(LogLevel.None))
+            .Configure<SimulationOptions>(o =>
+            {
+                o.TerminationCount = terminationCount;
+                o.MaxEvents = maxEvents;
+            })
             .AddGpssRuntime()
             .BuildServiceProvider();
         return services.GetRequiredService<SimulationEngine>();
@@ -31,8 +38,7 @@ public sealed class SimulationEngineTests
     public void Run_GenerateTerminate_StopsWhenTerminationCounterReachesZero(
         long terminationCount, double expectedEndTime)
     {
-        var result = CreateEngine().Run(MinimalProgram(meanArrival: 10, decrement: 1),
-            new SimulationOptions(TerminationCount: terminationCount));
+        var result = CreateEngine(terminationCount).Run(MinimalProgram(meanArrival: 10, decrement: 1));
 
         result.Success.ShouldBeTrue();
         result.Statistics.SimulationEndTime.ShouldBe(expectedEndTime);
@@ -43,8 +49,7 @@ public sealed class SimulationEngineTests
     [Theory, InlineData(0)]
     public void Run_TerminationCountZero_ReturnsImmediatelyWithNoTransactions(long terminationCount)
     {
-        var result = CreateEngine().Run(MinimalProgram(meanArrival: 10, decrement: 1),
-            new SimulationOptions(TerminationCount: terminationCount));
+        var result = CreateEngine(terminationCount).Run(MinimalProgram(meanArrival: 10, decrement: 1));
 
         result.Success.ShouldBeTrue();
         result.Statistics.SimulationEndTime.ShouldBe(0.0);
@@ -63,8 +68,7 @@ public sealed class SimulationEngineTests
     public void Run_SimulationClock_AdvancesByMeanInterArrivalTime(
         int mean, long terminationCount, double expectedEndTime)
     {
-        var result = CreateEngine().Run(MinimalProgram(meanArrival: mean, decrement: 1),
-            new SimulationOptions(TerminationCount: terminationCount));
+        var result = CreateEngine(terminationCount).Run(MinimalProgram(meanArrival: mean, decrement: 1));
 
         result.Statistics.SimulationEndTime.ShouldBe(expectedEndTime);
     }
@@ -79,8 +83,7 @@ public sealed class SimulationEngineTests
     public void Run_TerminateWithHigherDecrement_FewerTransactionsNeeded(
         int decrement, long terminationCount, long expectedTransactions)
     {
-        var result = CreateEngine().Run(MinimalProgram(meanArrival: 10, decrement: decrement),
-            new SimulationOptions(TerminationCount: terminationCount));
+        var result = CreateEngine(terminationCount).Run(MinimalProgram(meanArrival: 10, decrement: decrement));
 
         result.Success.ShouldBeTrue();
         result.Statistics.TotalTransactionsTerminated.ShouldBe(expectedTransactions);
@@ -95,8 +98,7 @@ public sealed class SimulationEngineTests
             new TerminateBlock()
         ]);
 
-        var result = CreateEngine().Run(program,
-            new SimulationOptions(TerminationCount: terminationCount, MaxEvents: 20));
+        var result = CreateEngine(terminationCount, maxEvents: 20).Run(program);
 
         result.Success.ShouldBeFalse();
         result.Diagnostics.ShouldContain(d => d.Severity == DiagnosticSeverity.Warning);
@@ -115,8 +117,7 @@ public sealed class SimulationEngineTests
             new TerminateBlock()
         ]);
 
-        var result = CreateEngine().Run(program,
-            new SimulationOptions(TerminationCount: 999, MaxEvents: maxEvents));
+        var result = CreateEngine(terminationCount: 999, maxEvents: maxEvents).Run(program);
 
         result.Success.ShouldBeFalse();
         result.Diagnostics.ShouldContain(d => d.Severity == DiagnosticSeverity.Warning);
@@ -129,8 +130,7 @@ public sealed class SimulationEngineTests
     [Theory, InlineData(5)]
     public void Run_NormalTermination_ProducesNoDiagnostics(long terminationCount)
     {
-        var result = CreateEngine().Run(MinimalProgram(meanArrival: 10, decrement: 1),
-            new SimulationOptions(TerminationCount: terminationCount));
+        var result = CreateEngine(terminationCount).Run(MinimalProgram(meanArrival: 10, decrement: 1));
 
         result.Diagnostics.ShouldBeEmpty();
     }
