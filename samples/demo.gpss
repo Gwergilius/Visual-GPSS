@@ -1,0 +1,7 @@
+; Minimal GPSS simulation: one server, constant inter-arrival time
+; Run with: gpss.cli demo  (or gpss.cli demo.gpss)
+; TerminationCount is set in appsettings.json (default: 5)
+
+          GENERATE  10        ; create a transaction every 10 time units
+          TERMINATE  1        ; destroy it and decrement the termination counter
+          END
