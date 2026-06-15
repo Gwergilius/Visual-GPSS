@@ -10,6 +10,7 @@ internal sealed class SimulationContext(long terminationCounter) : ISimulationCo
 {
     // (time, insertion-sequence) priority guarantees FIFO ordering for simultaneous events
     private readonly PriorityQueue<Transaction, (double Time, int Seq)> _fec = new();
+    private readonly Dictionary<string, Facility> _facilities = new(StringComparer.OrdinalIgnoreCase);
     private long _terminationCounter = terminationCounter;
     private int _nextTxId;
     private int _eventSeq;
@@ -45,6 +46,14 @@ internal sealed class SimulationContext(long terminationCounter) : ISimulationCo
     {
         _terminationCounter -= amount;
         TotalTransactionsTerminated++;
+    }
+
+    /// <inheritdoc/>
+    public Facility GetOrCreateFacility(string name)
+    {
+        if (!_facilities.TryGetValue(name, out var facility))
+            _facilities[name] = facility = new Facility(name);
+        return facility;
     }
 
     /// <summary>Advances the simulation clock to <paramref name="time"/>.</summary>

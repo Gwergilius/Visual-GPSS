@@ -105,6 +105,48 @@ public sealed class GpssParserTests
     }
 
     // -------------------------------------------------------------------------
+    // SEIZE and RELEASE blocks
+    // -------------------------------------------------------------------------
+
+    [Theory, InlineData("Barber")]
+    public void Parse_Seize_ProducesSeizeBlockWithSymbolOperand(string facilityName)
+    {
+        var result = Parser.Parse($"SEIZE {facilityName}");
+
+        result.Success.ShouldBeTrue();
+        result.Program!.Blocks[0].ShouldBeOfType<SeizeBlock>()
+            .FacilityName.ShouldBeOfType<SymbolExpression>().Name.ShouldBe(facilityName);
+    }
+
+    [Theory, InlineData("Barber")]
+    public void Parse_Release_ProducesReleaseBlockWithSymbolOperand(string facilityName)
+    {
+        var result = Parser.Parse($"RELEASE {facilityName}");
+
+        result.Success.ShouldBeTrue();
+        result.Program!.Blocks[0].ShouldBeOfType<ReleaseBlock>()
+            .FacilityName.ShouldBeOfType<SymbolExpression>().Name.ShouldBe(facilityName);
+    }
+
+    [Fact]
+    public void Parse_SeizeWithoutOperand_ReturnsError()
+    {
+        var result = Parser.Parse("SEIZE");
+
+        result.Success.ShouldBeFalse();
+        result.Diagnostics.ShouldContain(d => d.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
+    public void Parse_ReleaseWithoutOperand_ReturnsError()
+    {
+        var result = Parser.Parse("RELEASE");
+
+        result.Success.ShouldBeFalse();
+        result.Diagnostics.ShouldContain(d => d.Severity == DiagnosticSeverity.Error);
+    }
+
+    // -------------------------------------------------------------------------
     // Comments and whitespace
     // -------------------------------------------------------------------------
 
@@ -175,7 +217,7 @@ public sealed class GpssParserTests
     [Fact]
     public void Parse_UnknownBlockName_ReturnsError()
     {
-        var result = Parser.Parse("SEIZE CASHIER");
+        var result = Parser.Parse("FOOBAR 42");
 
         result.Success.ShouldBeFalse();
         result.Program.ShouldBeNull();

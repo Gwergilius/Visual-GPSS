@@ -2,7 +2,7 @@
   "profiles": {
     "Gpss.Cli": {
       "commandName": "Project",
-      "commandLineArgs": "samples/demo.gpss",
+      "commandLineArgs": "samples/barber",
       "workingDirectory": "$(SolutionDir)"
     }
   }

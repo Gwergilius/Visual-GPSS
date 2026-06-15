@@ -15,12 +15,15 @@ namespace Gpss.Parser;
 /// </code>
 /// Lines that are empty, whitespace-only, or begin with <c>;</c> (inline) or <c>*</c> (full-line) are ignored.
 /// The <c>END</c> statement terminates parsing; further lines are not processed.
-/// Currently recognised block names: <c>GENERATE</c>, <c>TERMINATE</c>.
+/// Currently recognised block names: <c>GENERATE</c>, <c>TERMINATE</c>, <c>SEIZE</c>, <c>RELEASE</c>.
 /// </remarks>
 public sealed class GpssParser
 {
     private static readonly IReadOnlySet<string> KnownBlockNames =
-        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "GENERATE", "TERMINATE" };
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "GENERATE", "TERMINATE", "SEIZE", "RELEASE"
+        };
 
     /// <summary>
     /// Parses <paramref name="sourceText"/> and returns a <see cref="GpssParseResult"/>.
@@ -123,6 +126,10 @@ public sealed class GpssParser
         {
             "GENERATE" => BuildGenerateBlock(label, operands, lineNumber, diagnostics),
             "TERMINATE" => BuildTerminateBlock(label, operands, lineNumber, diagnostics),
+            "SEIZE"     => BuildFacilityBlock<SeizeBlock>(label, operands, lineNumber, "SEIZE", diagnostics,
+                               name => new SeizeBlock(new SymbolExpression(name))),
+            "RELEASE"   => BuildFacilityBlock<ReleaseBlock>(label, operands, lineNumber, "RELEASE", diagnostics,
+                               name => new ReleaseBlock(new SymbolExpression(name))),
             _ => null
         };
 
@@ -160,6 +167,25 @@ public sealed class GpssParser
         index < operands.Count && operands[index] is { } text
             ? ParseIntExpr(text, lineNumber, name, diagnostics)
             : null;
+
+    private static TBlock? BuildFacilityBlock<TBlock>(
+        string? label, IReadOnlyList<string?> operands,
+        int lineNumber, string blockName,
+        List<DiagnosticMessage> diagnostics,
+        Func<string, TBlock> factory)
+        where TBlock : GpssBlock
+    {
+        if (operands.Count == 0 || operands[0] is null)
+        {
+            diagnostics.Add(new DiagnosticMessage(DiagnosticSeverity.Error,
+                $"Line {lineNumber}: {blockName} requires operand A (facility name)."));
+            return null;
+        }
+
+        return factory(operands[0]!) is { } block
+            ? (TBlock)((GpssBlock)block with { Label = label })
+            : null;
+    }
 
     private static IntegerExpression? ParseIntExpr(
         string text, int lineNumber, string operandName,

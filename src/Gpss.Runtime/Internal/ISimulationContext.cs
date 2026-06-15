@@ -38,4 +38,11 @@ internal interface ISimulationContext
     /// </summary>
     /// <param name="amount">Amount to subtract. Zero is a no-op.</param>
     void DecrementTerminationCounter(long amount);
+
+    /// <summary>
+    /// Returns the named <see cref="Facility"/>, creating it if it does not yet exist.
+    /// Lookup is case-insensitive, matching GPSS convention.
+    /// </summary>
+    /// <param name="name">Facility identifier as written in the GPSS source.</param>
+    Facility GetOrCreateFacility(string name);
 }

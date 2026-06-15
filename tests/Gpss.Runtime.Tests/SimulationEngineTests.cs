@@ -136,6 +136,46 @@ public sealed class SimulationEngineTests
     }
 
     // -------------------------------------------------------------------------
+    // SEIZE / RELEASE
+    // -------------------------------------------------------------------------
+
+    [Theory]
+    [InlineData(1, 10.0)]
+    [InlineData(3, 30.0)]
+    public void Run_SeizeRelease_TransactionsFlowThroughUncontestedFacility(
+        long terminationCount, double expectedEndTime)
+    {
+        // GENERATE → SEIZE → RELEASE → TERMINATE (no queuing: each tx arrives after previous is done)
+        var program = new GpssProgram([
+            new GenerateBlock(new IntegerExpression(10)),
+            new SeizeBlock(new SymbolExpression("Server")),
+            new ReleaseBlock(new SymbolExpression("Server")),
+            new TerminateBlock(new IntegerExpression(1))
+        ]);
+
+        var result = CreateEngine(terminationCount).Run(program);
+
+        result.Success.ShouldBeTrue();
+        result.Statistics.SimulationEndTime.ShouldBe(expectedEndTime);
+        result.Statistics.TotalTransactionsTerminated.ShouldBe(terminationCount);
+    }
+
+    [Theory, InlineData(3)]
+    public void Run_SeizeRelease_ProducesNoDiagnosticsForUncontestedFacility(long terminationCount)
+    {
+        var program = new GpssProgram([
+            new GenerateBlock(new IntegerExpression(10)),
+            new SeizeBlock(new SymbolExpression("Server")),
+            new ReleaseBlock(new SymbolExpression("Server")),
+            new TerminateBlock(new IntegerExpression(1))
+        ]);
+
+        var result = CreateEngine(terminationCount).Run(program);
+
+        result.Diagnostics.ShouldBeEmpty();
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
