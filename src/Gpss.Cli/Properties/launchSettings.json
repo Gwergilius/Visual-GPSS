@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Gpss.Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "samples/demo.gpss",
+      "workingDirectory": "$(SolutionDir)"
+    }
+  }
+}
