@@ -109,6 +109,23 @@ public sealed class GpssParserTests
     // -------------------------------------------------------------------------
 
     [Fact]
+    public void Parse_StarComment_IsIgnored()
+    {
+        const string source = """
+            *****************************
+            * Barber Shop Simulation    *
+            *****************************
+            GENERATE 10
+            TERMINATE 1
+            """;
+
+        var result = Parser.Parse(source);
+
+        result.Success.ShouldBeTrue();
+        result.Program!.Blocks.Count.ShouldBe(2);
+    }
+
+    [Fact]
     public void Parse_InlineComment_IsIgnored()
     {
         var result = Parser.Parse("GENERATE 10  ; creates a customer every 10 time units");

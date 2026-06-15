@@ -13,7 +13,7 @@ namespace Gpss.Parser;
 /// <code>
 /// [label]  BLOCK_NAME  [A[,B[,C[,D[,E]]]]]  [; comment]
 /// </code>
-/// Lines that are empty or contain only whitespace or a comment are ignored.
+/// Lines that are empty, whitespace-only, or begin with <c>;</c> (inline) or <c>*</c> (full-line) are ignored.
 /// The <c>END</c> statement terminates parsing; further lines are not processed.
 /// Currently recognised block names: <c>GENERATE</c>, <c>TERMINATE</c>.
 /// </remarks>
@@ -48,6 +48,9 @@ public sealed class GpssParser
             var line = (commentIdx >= 0 ? rawLine[..commentIdx] : rawLine).Trim();
 
             if (string.IsNullOrEmpty(line)) continue;
+
+            // Full-line comment: * as the first non-whitespace character (GPSS column-1 convention)
+            if (line[0] == '*') continue;
 
             // Split into whitespace-delimited tokens
             var tokens = line.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
