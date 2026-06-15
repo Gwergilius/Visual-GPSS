@@ -152,7 +152,7 @@ Start with the Tutorial Chapter 1 barber shop, progress through the five simple 
 
 2. ~~Collect runnable simulation examples for test coverage~~ ✓ Done — see [docs/sources/examples.md].
 
-3. Mirror essential references metadata (not copyrighted full text):
+3. ~~Mirror essential references metadata (not copyrighted full text)~~ ✓ Done — see [docs/sources/primary.md], [docs/sources/secondary.md], [docs/sources/projects.md]:
 - title, author, year, URL, access date, dialect relevance, reliability score.
 
 4. ~~Build a GPSS block compatibility matrix~~ ✓ Done — see [docs/block-compatibility-matrix.md]:
