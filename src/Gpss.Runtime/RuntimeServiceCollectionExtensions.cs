@@ -11,7 +11,7 @@ public static class RuntimeServiceCollectionExtensions
 {
     /// <summary>
     /// Registers all Gpss.Runtime services: <see cref="SimulationEngine"/>,
-    /// <see cref="IRandomNumberGenerator"/>, and all <see cref="IBlockBehaviour"/> implementations
+    /// <see cref="IRandomNumberGeneratorFactory"/>, and all <see cref="IBlockBehaviour"/> implementations
     /// discovered automatically via reflection in the <c>Gpss.Runtime</c> assembly.
     /// </summary>
     /// <remarks>
@@ -23,7 +23,11 @@ public static class RuntimeServiceCollectionExtensions
     /// <returns>The same <paramref name="services"/> for chaining.</returns>
     public static IServiceCollection AddGpssRuntime(this IServiceCollection services)
     {
-        services.AddSingleton<IRandomNumberGenerator, SystemRandomNumberGenerator>();
+        services.AddSingleton<IRandomNumberGeneratorFactory>(sp =>
+        {
+            var seed = sp.GetRequiredService<IOptions<SimulationOptions>>().Value.RandomSeed;
+            return seed is { } s ? new SystemRandomNumberGeneratorFactory(s) : new SystemRandomNumberGeneratorFactory();
+        });
 
         // Auto-discover and register all IBlockBehaviour implementations in this assembly
         foreach (var type in DiscoverBlockBehaviours())

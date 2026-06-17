@@ -27,6 +27,29 @@ public sealed class SimulationEngineTests
         return services.GetRequiredService<SimulationEngine>();
     }
 
+    // Deterministic stand-in for spread-based randomness: returns mean+spread (the upper
+    // bound) instead of a real uniform sample, so tests can assert an exact expected time.
+    private static SimulationEngine CreateEngineWithUpperBoundVariate(long terminationCount)
+    {
+        var services = new ServiceCollection()
+            .AddLogging(b => b.SetMinimumLevel(LogLevel.None))
+            .Configure<SimulationOptions>(o => o.TerminationCount = terminationCount)
+            .AddGpssRuntime()
+            .AddSingleton<IRandomNumberGeneratorFactory, UpperBoundRandomNumberGeneratorFactory>()
+            .BuildServiceProvider();
+        return services.GetRequiredService<SimulationEngine>();
+    }
+
+    private sealed class UpperBoundRandomNumberGeneratorFactory : IRandomNumberGeneratorFactory
+    {
+        public IRandomVariateGenerator CreateUniform(int stream = 1) => new UpperBoundVariateGenerator();
+
+        private sealed class UpperBoundVariateGenerator : IRandomVariateGenerator
+        {
+            public double Sample(double mean, double spread) => mean + spread;
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Termination counter
     // -------------------------------------------------------------------------
@@ -174,6 +197,39 @@ public sealed class SimulationEngineTests
 
         result.Success.ShouldBeTrue();
         result.Statistics.SimulationEndTime.ShouldBe(10.0);
+    }
+
+    [Theory, InlineData(1, 100.0)]
+    public void Run_AdvanceWithSpread_UsesVariateGeneratorForDelay(
+        long terminationCount, double expectedEndTime)
+    {
+        // GENERATE 10 (no spread) → first arrival @10; ADVANCE 40,50 → resumes at 10+(40+50)=100
+        var program = new GpssProgram([
+            new GenerateBlock(new IntegerExpression(10)),
+            new AdvanceBlock(new IntegerExpression(40), Spread: new IntegerExpression(50)),
+            new TerminateBlock(new IntegerExpression(1))
+        ]);
+
+        var result = CreateEngineWithUpperBoundVariate(terminationCount).Run(program);
+
+        result.Success.ShouldBeTrue();
+        result.Statistics.SimulationEndTime.ShouldBe(expectedEndTime);
+    }
+
+    [Theory, InlineData(1, 70.0)]
+    public void Run_GenerateWithSpread_UsesVariateGeneratorForInterval(
+        long terminationCount, double expectedEndTime)
+    {
+        // GENERATE 30,40 → first arrival = variate.Sample(30,40) = 30+40=70
+        var program = new GpssProgram([
+            new GenerateBlock(new IntegerExpression(30), Spread: new IntegerExpression(40)),
+            new TerminateBlock(new IntegerExpression(1))
+        ]);
+
+        var result = CreateEngineWithUpperBoundVariate(terminationCount).Run(program);
+
+        result.Success.ShouldBeTrue();
+        result.Statistics.SimulationEndTime.ShouldBe(expectedEndTime);
     }
 
     // -------------------------------------------------------------------------

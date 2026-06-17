@@ -10,23 +10,28 @@ namespace Gpss.Runtime.Internal.Behaviours;
 /// the current CEC pass and re-scheduled into the Future Events Chain to resume at
 /// <c>Clock + delay</c>.
 /// </summary>
-internal sealed class AdvanceBlockBehaviour(ILogger<AdvanceBlockBehaviour> logger)
+internal sealed class AdvanceBlockBehaviour(ILogger<AdvanceBlockBehaviour> logger, IRandomNumberGeneratorFactory randomFactory)
     : BlockBehaviour<AdvanceBlock>
 {
     private static readonly string BN = "ADVANCE".PadRight(9);
 
-    /// <inheritdoc/>
-    protected override void OnSimulationStart(AdvanceBlock block, BlockContext blockContext, ISimulationContext context)
+    private sealed class State(IRandomVariateGenerator variate)
     {
-        // No initialisation needed
+        internal IRandomVariateGenerator Variate { get; } = variate;
     }
+
+    /// <inheritdoc/>
+    protected override void OnSimulationStart(AdvanceBlock block, BlockContext blockContext, ISimulationContext context) =>
+        blockContext.State = new State(randomFactory.CreateUniform());
 
     /// <inheritdoc/>
     protected override BlockTransactionResult OnTransactionArrival(
         AdvanceBlock block, BlockContext blockContext, Transaction tx, ISimulationContext context)
     {
-        var delay = block.MeanDelayTime is not null ? Evaluate(block.MeanDelayTime) : 0.0;
-        var resumeTime = context.Clock + delay;
+        var state = (State)blockContext.State!;
+        var mean = block.MeanDelayTime is not null ? Evaluate(block.MeanDelayTime) : 0.0;
+        var spread = block.Spread is not null ? Evaluate(block.Spread) : 0.0;
+        var resumeTime = context.Clock + state.Variate.Sample(mean, spread);
 
         tx.BlockIndex = blockContext.Index + 1;
         context.ScheduleTransaction(tx, resumeTime);
