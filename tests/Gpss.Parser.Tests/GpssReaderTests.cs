@@ -259,6 +259,20 @@ public sealed class GpssReaderTests
     }
 
     [Fact]
+    public void Read_Include_MissingFile_ThrowsWithFileNameAndLineNumberContext()
+    {
+        const string parentSource = " GENERATE 10\n INCLUDE missing.gpss";
+
+        using var reader = new GpssReader(new StringReader(parentSource), "main.gpss",
+            _ => throw new FileNotFoundException("GPSS source file not found. Tried: 'missing.gpss'."));
+
+        reader.Read(); // GENERATE; advances past line 1 so the INCLUDE failure is reported at line 2
+
+        var ex = Should.Throw<FileNotFoundException>(() => reader.Read());
+        ex.Message.ShouldBe("'main.gpss' line 2: GPSS source file not found. Tried: 'missing.gpss'.");
+    }
+
+    [Fact]
     public void Read_NestedInclude_ResumesEachParentInOrder()
     {
         const string grandparentSource = " INCLUDE parent.gpss\n TERMINATE 1";

@@ -337,6 +337,49 @@ public sealed class GpssParserTests
         }
     }
 
+    [Theory]
+    [InlineData("included.gps")]
+    [InlineData("included.gpss")]
+    public void Parse_Include_NoExtensionGiven_FallsBackToGpsOrGpssFile(string actualFileName)
+    {
+        var tempDir = Directory.CreateTempSubdirectory();
+        try
+        {
+            File.WriteAllText(Path.Combine(tempDir.FullName, actualFileName), " TERMINATE 1");
+
+            const string source = " GENERATE 10\n INCLUDE included";
+
+            var result = Parser.Parse(source, Path.Combine(tempDir.FullName, "main.gpss"));
+
+            result.Success.ShouldBeTrue();
+            result.Program!.Blocks.Count.ShouldBe(2);
+            result.Program.Blocks[1].ShouldBeOfType<TerminateBlock>();
+        }
+        finally
+        {
+            tempDir.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Parse_Include_MissingFile_ErrorIncludesFileNameAndLineNumber()
+    {
+        var tempDir = Directory.CreateTempSubdirectory();
+        try
+        {
+            const string source = " GENERATE 10\n INCLUDE missing";
+            var mainPath = Path.Combine(tempDir.FullName, "main.gpss");
+
+            var ex = Should.Throw<FileNotFoundException>(() => Parser.Parse(source, mainPath));
+
+            ex.Message.ShouldStartWith($"'{mainPath}' line 2:");
+        }
+        finally
+        {
+            tempDir.Delete(recursive: true);
+        }
+    }
+
     [Fact]
     public void Parse_EmptyAndWhitespaceLines_AreIgnored()
     {

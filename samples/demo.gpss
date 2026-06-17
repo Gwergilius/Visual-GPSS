@@ -1,7 +1,11 @@
 ; Minimal GPSS simulation: one server, constant inter-arrival time
 ; Run with: gpss.cli demo  (or gpss.cli demo.gpss)
-; TerminationCount is set in appsettings.json (default: 5)
+; TerminationCount is set in appsettings.json (default: 50, large enough for the
+; INCLUDEd Barber shop simulation below to start serving customers before the
+; shared termination counter, decremented by every TERMINATE block, reaches zero.
+; Override with -tc <n> / --terminationCount <n> to let it run longer.)
 
           GENERATE  10        ; create a transaction every 10 time units
           TERMINATE  1        ; destroy it and decrement the termination counter
-          END
+
+          INCLUDE "Barber"    ; Run another simulation

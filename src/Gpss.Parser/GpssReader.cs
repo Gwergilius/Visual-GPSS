@@ -31,9 +31,11 @@ namespace Gpss.Parser;
 /// quoted), the current file and position are pushed onto a stack, the named file is opened and
 /// read from its first line, and once it reaches end-of-file the previous file and position are
 /// popped back off the stack so reading resumes at the line after the <c>INCLUDE</c>. By default
-/// included files are opened from disk via <see cref="File.OpenText"/>, resolving relative names
-/// against the directory of the file containing the <c>INCLUDE</c> statement; pass
-/// <paramref name="includeFileOpener"/> to override this (e.g. in tests).
+/// included files are opened from disk via <see cref="GpssSourceFile.Resolve"/> (falling back to
+/// the <c>.gps</c>/<c>.gpss</c> extensions when the named file doesn't exist as given) and
+/// <see cref="File.OpenText"/>, resolving relative names against the directory of the file
+/// containing the <c>INCLUDE</c> statement; pass <paramref name="includeFileOpener"/> to override
+/// this (e.g. in tests).
 /// </para>
 /// </remarks>
 public sealed class GpssReader : IDisposable
@@ -54,12 +56,13 @@ public sealed class GpssReader : IDisposable
     /// Defaults to the empty string when the source has no associated file.
     /// </param>
     /// <param name="includeFileOpener">
-    /// Opens an included file given its resolved name; defaults to <see cref="File.OpenText"/>.
+    /// Opens an included file given its resolved name; defaults to resolving the name via
+    /// <see cref="GpssSourceFile.Resolve"/> and opening it with <see cref="File.OpenText"/>.
     /// Overridable so tests can supply included content without touching the file system.
     /// </param>
     public GpssReader(TextReader inner, string fileName = "", Func<string, TextReader>? includeFileOpener = null)
     {
-        _includeFileOpener = includeFileOpener ?? (path => File.OpenText(path));
+        _includeFileOpener = includeFileOpener ?? (path => File.OpenText(GpssSourceFile.Resolve(path)));
         _current = new Frame(inner, fileName, NextFileNumber());
     }
 
@@ -278,7 +281,17 @@ public sealed class GpssReader : IDisposable
     private void HandleInclude(string includeFileName)
     {
         var resolvedName = ResolveIncludePath(_current.FileName, includeFileName);
-        var reader = _includeFileOpener(resolvedName);
+
+        TextReader reader;
+        try
+        {
+            reader = _includeFileOpener(resolvedName);
+        }
+        catch (FileNotFoundException ex)
+        {
+            throw new FileNotFoundException(
+                $"'{_current.FileName}' line {_current.LineNumber}: {ex.Message}", ex);
+        }
 
         _stack.Push(_current);
         _current = new Frame(reader, resolvedName, NextFileNumber());
