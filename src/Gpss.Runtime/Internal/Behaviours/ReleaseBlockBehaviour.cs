@@ -35,13 +35,13 @@ internal sealed class ReleaseBlockBehaviour(ILogger<ReleaseBlockBehaviour> logge
             context.ScheduleTransaction(nextTx, context.Clock);
 
             logger.LogDebug(
-                "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} releases '{Facility}'; tx #{NextId} activated",
+                "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} releases '{Facility}'; tx #{NextId} activated",
                 context.Clock, blockContext.Index, BN, tx.Id, facilityName, nextTx.Id);
         }
         else
         {
             logger.LogDebug(
-                "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} releases '{Facility}'",
+                "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} releases '{Facility}'",
                 context.Clock, blockContext.Index, BN, tx.Id, facilityName);
         }
 

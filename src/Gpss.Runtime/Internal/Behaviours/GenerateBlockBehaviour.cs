@@ -34,7 +34,7 @@ internal sealed class GenerateBlockBehaviour(ILogger<GenerateBlockBehaviour> log
         context.ScheduleTransaction(tx, firstOffset);
 
         logger.LogDebug(
-            "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} → FEC t={ScheduledTime:F1}",
+            "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} → FEC t={ScheduledTime:F0}",
             context.Clock, blockContext.Index, BN, tx.Id, firstOffset);
     }
 
@@ -57,13 +57,13 @@ internal sealed class GenerateBlockBehaviour(ILogger<GenerateBlockBehaviour> log
             context.ScheduleTransaction(nextTx, nextTime);
 
             logger.LogDebug(
-                "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} activated; #{NextId} → FEC t={NextTime:F1}",
+                "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} activated; #{NextId} → FEC t={NextTime:F0}",
                 context.Clock, blockContext.Index, BN, tx.Id, nextTx.Id, nextTime);
         }
         else
         {
             logger.LogDebug(
-                "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} activated (generation limit reached)",
+                "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} activated (generation limit reached)",
                 context.Clock, blockContext.Index, BN, tx.Id);
         }
 

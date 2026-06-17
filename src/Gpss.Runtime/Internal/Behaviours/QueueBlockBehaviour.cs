@@ -28,7 +28,7 @@ internal sealed class QueueBlockBehaviour(ILogger<QueueBlockBehaviour> logger)
         queue.Enter(tx, context.Clock);
 
         logger.LogDebug(
-            "{SimTime:F1} [{BlockIndex}]{BlockName}: tx #{TxId} entered '{QueueName}'",
+            "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} entered '{QueueName}'",
             context.Clock, blockContext.Index, BN, tx.Id, queueName);
 
         tx.BlockIndex = blockContext.Index + 1;
