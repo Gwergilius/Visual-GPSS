@@ -1,6 +1,5 @@
 using Gpss.Model.Blocks;
 using Microsoft.Extensions.Logging;
-using static Gpss.Runtime.Internal.ExpressionEvaluator;
 
 namespace Gpss.Runtime.Internal.Behaviours;
 
@@ -22,23 +21,21 @@ internal sealed class AdvanceBlockBehaviour(ILogger<AdvanceBlockBehaviour> logge
 
     /// <inheritdoc/>
     protected override void OnSimulationStart(AdvanceBlock block, BlockContext blockContext, ISimulationContext context) =>
-        blockContext.State = new State(randomFactory.CreateUniform());
+        blockContext.State = new State(randomFactory.Create(block.DelayTime));
 
     /// <inheritdoc/>
     protected override BlockTransactionResult OnTransactionArrival(
         AdvanceBlock block, BlockContext blockContext, Transaction tx, ISimulationContext context)
     {
         var state = (State)blockContext.State!;
-        var mean = block.MeanDelayTime is not null ? Evaluate(block.MeanDelayTime) : 0.0;
-        var spread = block.Spread is not null ? Evaluate(block.Spread) : 0.0;
-        var resumeTime = context.Clock + state.Variate.Sample(mean, spread);
+        var resumeTime = context.Clock + state.Variate.Sample();
 
         tx.BlockIndex = blockContext.Index + 1;
         context.ScheduleTransaction(tx, resumeTime);
 
         logger.LogDebug(
-            "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} advancing → FEC t={ResumeTime:F0}",
-            context.Clock, blockContext.Index, BN, tx.Id, resumeTime);
+            "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} advancing → FEC t={ResumeTime:F0}{Description}",
+            context.Clock, blockContext.Index, BN, tx.Id, resumeTime, DescriptionSuffix(block));
 
         return BlockTransactionResult.Delayed;
     }

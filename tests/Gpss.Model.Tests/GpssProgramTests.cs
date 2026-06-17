@@ -1,6 +1,7 @@
 using Gpss.Model;
 using Gpss.Model.Blocks;
 using Gpss.Model.Expressions;
+using Gpss.Model.Variates;
 using Shouldly;
 
 namespace Gpss.Model.Tests;
@@ -11,7 +12,7 @@ public sealed class GpssProgramTests
     public void Program_WithGenerateAndTerminate_ContainsBothBlocksInOrder(int meanArrival, int decrementCount)
     {
         var program = new GpssProgram([
-            new GenerateBlock(new IntegerExpression(meanArrival)),
+            new GenerateBlock(VariateSpec.Constant(new IntegerExpression(meanArrival))),
             new TerminateBlock(new IntegerExpression(decrementCount))
         ]);
 
@@ -23,8 +24,8 @@ public sealed class GpssProgramTests
     [Theory, InlineData(10)]
     public void Program_RecordEquality_TwoProgramsWithSameBlocksAreEqual(int meanArrival)
     {
-        var a = new GpssProgram([new GenerateBlock(new IntegerExpression(meanArrival))]);
-        var b = new GpssProgram([new GenerateBlock(new IntegerExpression(meanArrival))]);
+        var a = new GpssProgram([new GenerateBlock(VariateSpec.Constant(new IntegerExpression(meanArrival)))]);
+        var b = new GpssProgram([new GenerateBlock(VariateSpec.Constant(new IntegerExpression(meanArrival)))]);
 
         a.ShouldBe(b);
     }
@@ -33,8 +34,8 @@ public sealed class GpssProgramTests
     public void Program_RecordEquality_ProgramsWithDifferentBlocksAreNotEqual(int meanA, int meanB)
     {
         meanA.ShouldNotBe(meanB);
-        var a = new GpssProgram([new GenerateBlock(new IntegerExpression(meanA))]);
-        var b = new GpssProgram([new GenerateBlock(new IntegerExpression(meanB))]);
+        var a = new GpssProgram([new GenerateBlock(VariateSpec.Constant(new IntegerExpression(meanA)))]);
+        var b = new GpssProgram([new GenerateBlock(VariateSpec.Constant(new IntegerExpression(meanB)))]);
 
         a.ShouldNotBe(b);
     }

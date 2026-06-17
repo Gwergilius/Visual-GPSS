@@ -32,12 +32,12 @@ using var host = Host.CreateDefaultBuilder(args[1..])
     .Build();
 
 var parser = host.Services.GetRequiredService<GpssParser>();
-var parseResult = parser.Parse(source);
+var parseResult = parser.Parse(source, filePath);
 
 if (!parseResult.Success)
 {
     foreach (var d in parseResult.Diagnostics)
-        Console.Error.WriteLine($"[{d.Severity}] {d.Message}");
+        Console.Error.WriteLine(d);
     return 1;
 }
 

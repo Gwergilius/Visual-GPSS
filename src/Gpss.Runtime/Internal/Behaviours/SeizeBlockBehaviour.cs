@@ -32,15 +32,15 @@ internal sealed class SeizeBlockBehaviour(ILogger<SeizeBlockBehaviour> logger)
         {
             tx.BlockIndex = blockContext.Index + 1;
             logger.LogDebug(
-                "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} seized '{Facility}'",
-                context.Clock, blockContext.Index, BN, tx.Id, facilityName);
+                "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} seized '{Facility}'{Description}",
+                context.Clock, blockContext.Index, BN, tx.Id, facilityName, DescriptionSuffix(block));
             return BlockTransactionResult.Moved;
         }
 
         facility.EnqueueWaiting(tx);
         logger.LogDebug(
-            "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} waiting for '{Facility}' (q={QueueLength})",
-            context.Clock, blockContext.Index, BN, tx.Id, facilityName, facility.WaitCount);
+            "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} waiting for '{Facility}' (q={QueueLength}){Description}",
+            context.Clock, blockContext.Index, BN, tx.Id, facilityName, facility.WaitCount, DescriptionSuffix(block));
         return BlockTransactionResult.Delayed;
     }
 }

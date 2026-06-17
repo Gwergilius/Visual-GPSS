@@ -13,8 +13,10 @@ namespace Gpss.Parser;
 /// <code>
 /// [label]  BLOCK_NAME  [A[,B[,C[,D[,E]]]]]  [; comment]
 /// </code>
-/// Lines that are empty, whitespace-only, or begin with <c>;</c> (inline) or <c>*</c> (full-line) are ignored
-/// (filtered out by <see cref="GpssReader"/>).
+/// The block name is never in column 1: a label, when present, occupies column 1, so a
+/// label-less statement must be indented (see <see cref="GpssReader"/> for the full lexical rule).
+/// Lines that are empty, whitespace-only, or begin with <c>;</c> (inline) or <c>*</c> (full-line) are ignored,
+/// and <c>INCLUDE</c> statements are followed transparently, all handled by <see cref="GpssReader"/>.
 /// The <c>END</c> statement terminates parsing; further lines are not processed.
 /// Recognised block names are listed in <see cref="KnownGpssBlocks"/>.
 /// Acts as a Mediator: dispatches each recognised block name to its registered
@@ -41,62 +43,44 @@ public sealed class GpssParser
     /// Parses <paramref name="sourceText"/> and returns a <see cref="GpssParseResult"/>.
     /// </summary>
     /// <param name="sourceText">GPSS source text to parse.</param>
+    /// <param name="fileName">
+    /// Name or path of <paramref name="sourceText"/>'s source file. Used to resolve relative
+    /// <c>INCLUDE</c> targets and to populate file information in diagnostics; defaults to the
+    /// empty string when the source has no associated file.
+    /// </param>
     /// <returns>
     /// A result containing the parsed program on success,
     /// or <see langword="null"/> for <see cref="GpssParseResult.Program"/> when errors were found.
     /// </returns>
-    public GpssParseResult Parse(string sourceText)
+    public GpssParseResult Parse(string sourceText, string fileName = "")
     {
         var blocks = new List<GpssBlock>();
         var diagnostics = new List<DiagnosticMessage>();
 
-        using var reader = new GpssReader(new StringReader(sourceText));
-        string? line;
+        using var reader = new GpssReader(new StringReader(sourceText), fileName);
+        GpssStatement? statement;
 
-        while ((line = reader.ReadLine()) != null)
+        while ((statement = reader.Read()) != null)
         {
-            var lineNumber = reader.LineNumber;
-
-            // Split into whitespace-delimited tokens
-            var tokens = line.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
-
             // Detect END statement
-            if (tokens[0].Equals("END", StringComparison.OrdinalIgnoreCase)) break;
+            if (statement.Verb.Equals("END", StringComparison.OrdinalIgnoreCase)) break;
 
-            // Distinguish label from block name:
-            // if the second token is a known block name, the first is the label
-            string? label;
-            string blockName;
-            int operandTokenStart;
-
-            if (tokens.Length >= 2 && IsBlockName(tokens[1]))
-            {
-                label = tokens[0];
-                blockName = tokens[1].ToUpperInvariant();
-                operandTokenStart = 2;
-            }
-            else if (IsBlockName(tokens[0]))
-            {
-                label = null;
-                blockName = tokens[0].ToUpperInvariant();
-                operandTokenStart = 1;
-            }
-            else
+            if (!IsBlockName(statement.Verb))
             {
                 diagnostics.Add(new DiagnosticMessage(DiagnosticSeverity.Error,
-                    $"Line {lineNumber}: '{tokens[0]}' is not a recognised block name."));
+                    $"'{statement.Verb}' is not a recognised block name.", statement));
                 continue;
             }
 
-            // Collect operand tokens and join without spaces, then split by comma.
-            // This handles both "GENERATE 10,3" and "GENERATE 10 , 3" correctly.
-            var operandString = operandTokenStart < tokens.Length
-                ? string.Join("", tokens[operandTokenStart..])
-                : string.Empty;
+            if (statement.Comment is { } comment)
+            {
+                // The comment is the Message here, so it isn't also passed via the
+                // ISourceLocation overload, which would duplicate it onto DiagnosticMessage.Comment.
+                diagnostics.Add(new DiagnosticMessage(DiagnosticSeverity.Info, comment,
+                    statement.FileName, statement.LineNumber));
+            }
 
-            var operands = SplitOperands(operandString);
-
-            var block = _builders.For(blockName).Build(label, operands, lineNumber, diagnostics);
+            var block = _builders.For(statement.Verb).Build(statement, diagnostics);
             if (block != null) blocks.Add(block);
         }
 
@@ -106,17 +90,4 @@ public sealed class GpssParser
     }
 
     private static bool IsBlockName(string token) => KnownGpssBlocks.IsKnown(token);
-
-    /// <summary>
-    /// Splits a comma-delimited operand string into individual operand strings.
-    /// Returns <see langword="null"/> for empty slots (e.g. the middle slot in <c>10,,5</c>).
-    /// </summary>
-    private static IReadOnlyList<string?> SplitOperands(string operandString)
-    {
-        if (string.IsNullOrEmpty(operandString)) return [];
-
-        return operandString.Split(',')
-            .Select(p => { var t = p.Trim(); return string.IsNullOrEmpty(t) ? null : t; })
-            .ToArray();
-    }
 }

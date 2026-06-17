@@ -27,8 +27,8 @@ internal sealed class TerminateBlockBehaviour(ILogger<TerminateBlockBehaviour> l
         context.DecrementTerminationCounter(decrement);
 
         logger.LogDebug(
-            "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} destroyed (−{Decrement})",
-            context.Clock, blockContext.Index, BN, tx.Id, decrement);
+            "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} destroyed (−{Decrement}){Description}",
+            context.Clock, blockContext.Index, BN, tx.Id, decrement, DescriptionSuffix(block));
 
         return BlockTransactionResult.Destroyed;
     }

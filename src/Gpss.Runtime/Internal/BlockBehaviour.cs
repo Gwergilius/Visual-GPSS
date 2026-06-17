@@ -32,4 +32,12 @@ internal abstract class BlockBehaviour<TBlock> : IBlockBehaviour where TBlock : 
     /// <param name="tx">The arriving transaction.</param>
     /// <param name="context">Simulation state exposed by the mediator.</param>
     protected abstract BlockTransactionResult OnTransactionArrival(TBlock block, BlockContext blockContext, Transaction tx, ISimulationContext context);
+
+    /// <summary>
+    /// Renders <paramref name="block"/>'s <see cref="GpssBlock.Description"/> as a
+    /// <c> (description)</c> suffix for log messages, so the author's explanation of intent stays
+    /// visible in the log; <c>""</c> when the block has no description.
+    /// </summary>
+    protected static string DescriptionSuffix(TBlock block) =>
+        block.Description is { Length: > 0 } ? $" ({block.Description})" : "";
 }

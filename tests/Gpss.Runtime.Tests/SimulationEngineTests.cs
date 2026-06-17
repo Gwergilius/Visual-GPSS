@@ -2,6 +2,7 @@ using Gpss.Contracts;
 using Gpss.Model;
 using Gpss.Model.Blocks;
 using Gpss.Model.Expressions;
+using Gpss.Model.Variates;
 using Gpss.Runtime;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -42,11 +43,18 @@ public sealed class SimulationEngineTests
 
     private sealed class UpperBoundRandomNumberGeneratorFactory : IRandomNumberGeneratorFactory
     {
-        public IRandomVariateGenerator CreateUniform(int stream = 1) => new UpperBoundVariateGenerator();
+        public IRandomVariateGenerator Create(VariateSpec spec, int stream = 1) => new UpperBoundVariateGenerator(spec);
 
-        private sealed class UpperBoundVariateGenerator : IRandomVariateGenerator
+        private sealed class UpperBoundVariateGenerator(VariateSpec spec) : IRandomVariateGenerator
         {
-            public double Sample(double mean, double spread) => mean + spread;
+            public double Sample() => spec switch
+            {
+                UniformVariateSpec u => ToValue(u.Mean) + ToValue(u.Spread),
+                ConstantVariateSpec c => ToValue(c.Value),
+                _ => throw new NotSupportedException()
+            };
+
+            private static int ToValue(GpssExpression expression) => ((IntegerExpression)expression).Value;
         }
     }
 
@@ -117,7 +125,7 @@ public sealed class SimulationEngineTests
         int mean, long terminationCount)
     {
         var program = new GpssProgram([
-            new GenerateBlock(new IntegerExpression(mean)),
+            new GenerateBlock(VariateSpec.Constant(new IntegerExpression(mean))),
             new TerminateBlock()
         ]);
 
@@ -136,7 +144,7 @@ public sealed class SimulationEngineTests
     public void Run_MaxEventsExceeded_ReturnsFalseWithWarning(long maxEvents)
     {
         var program = new GpssProgram([
-            new GenerateBlock(new IntegerExpression(10)),
+            new GenerateBlock(VariateSpec.Constant(new IntegerExpression(10))),
             new TerminateBlock()
         ]);
 
@@ -172,8 +180,8 @@ public sealed class SimulationEngineTests
         // GENERATE (mean=10) → ADVANCE (delay=40) → TERMINATE: the N-th transaction
         // terminates at N*10 + 40
         var program = new GpssProgram([
-            new GenerateBlock(new IntegerExpression(10)),
-            new AdvanceBlock(new IntegerExpression(40)),
+            new GenerateBlock(VariateSpec.Constant(new IntegerExpression(10))),
+            new AdvanceBlock(VariateSpec.Constant(new IntegerExpression(40))),
             new TerminateBlock(new IntegerExpression(1))
         ]);
 
@@ -188,8 +196,8 @@ public sealed class SimulationEngineTests
     public void Run_AdvanceWithoutOperand_NoDelayIsApplied(long terminationCount)
     {
         var program = new GpssProgram([
-            new GenerateBlock(new IntegerExpression(10)),
-            new AdvanceBlock(),
+            new GenerateBlock(VariateSpec.Constant(new IntegerExpression(10))),
+            new AdvanceBlock(VariateSpec.Constant(new IntegerExpression(0))),
             new TerminateBlock(new IntegerExpression(1))
         ]);
 
@@ -205,8 +213,8 @@ public sealed class SimulationEngineTests
     {
         // GENERATE 10 (no spread) → first arrival @10; ADVANCE 40,50 → resumes at 10+(40+50)=100
         var program = new GpssProgram([
-            new GenerateBlock(new IntegerExpression(10)),
-            new AdvanceBlock(new IntegerExpression(40), Spread: new IntegerExpression(50)),
+            new GenerateBlock(VariateSpec.Constant(new IntegerExpression(10))),
+            new AdvanceBlock(VariateSpec.Uniform(new IntegerExpression(40), new IntegerExpression(50))),
             new TerminateBlock(new IntegerExpression(1))
         ]);
 
@@ -220,9 +228,9 @@ public sealed class SimulationEngineTests
     public void Run_GenerateWithSpread_UsesVariateGeneratorForInterval(
         long terminationCount, double expectedEndTime)
     {
-        // GENERATE 30,40 → first arrival = variate.Sample(30,40) = 30+40=70
+        // GENERATE 30,40 → first arrival = variate.Sample() = mean+spread = 30+40=70
         var program = new GpssProgram([
-            new GenerateBlock(new IntegerExpression(30), Spread: new IntegerExpression(40)),
+            new GenerateBlock(VariateSpec.Uniform(new IntegerExpression(30), new IntegerExpression(40))),
             new TerminateBlock(new IntegerExpression(1))
         ]);
 
@@ -244,7 +252,7 @@ public sealed class SimulationEngineTests
     {
         // QUEUE and DEPART are statistical-only; the transaction must not be delayed
         var program = new GpssProgram([
-            new GenerateBlock(new IntegerExpression(10)),
+            new GenerateBlock(VariateSpec.Constant(new IntegerExpression(10))),
             new QueueBlock(new SymbolExpression("Server")),
             new DepartBlock(new SymbolExpression("Server")),
             new TerminateBlock(new IntegerExpression(1))
@@ -269,7 +277,7 @@ public sealed class SimulationEngineTests
     {
         // GENERATE → SEIZE → RELEASE → TERMINATE (no queuing: each tx arrives after previous is done)
         var program = new GpssProgram([
-            new GenerateBlock(new IntegerExpression(10)),
+            new GenerateBlock(VariateSpec.Constant(new IntegerExpression(10))),
             new SeizeBlock(new SymbolExpression("Server")),
             new ReleaseBlock(new SymbolExpression("Server")),
             new TerminateBlock(new IntegerExpression(1))
@@ -286,7 +294,7 @@ public sealed class SimulationEngineTests
     public void Run_SeizeRelease_ProducesNoDiagnosticsForUncontestedFacility(long terminationCount)
     {
         var program = new GpssProgram([
-            new GenerateBlock(new IntegerExpression(10)),
+            new GenerateBlock(VariateSpec.Constant(new IntegerExpression(10))),
             new SeizeBlock(new SymbolExpression("Server")),
             new ReleaseBlock(new SymbolExpression("Server")),
             new TerminateBlock(new IntegerExpression(1))
@@ -303,7 +311,7 @@ public sealed class SimulationEngineTests
 
     private static GpssProgram MinimalProgram(int meanArrival, int decrement) =>
         new([
-            new GenerateBlock(new IntegerExpression(meanArrival)),
+            new GenerateBlock(VariateSpec.Constant(new IntegerExpression(meanArrival))),
             new TerminateBlock(new IntegerExpression(decrement))
         ]);
 }

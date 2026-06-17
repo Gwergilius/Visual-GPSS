@@ -3,31 +3,32 @@ using Gpss.Model.Blocks;
 
 namespace Gpss.Parser.Internal.Builders;
 
-/// <summary>Builds a <see cref="GenerateBlock"/> from its label and operand tokens.</summary>
+/// <summary>Builds a <see cref="GenerateBlock"/> from its parsed source statement.</summary>
 internal sealed class GenerateBlockBuilder : IBlockBuilder
 {
     /// <inheritdoc/>
     public Type BlockType => typeof(GenerateBlock);
 
     /// <inheritdoc/>
-    public GpssBlock? Build(string? label, IReadOnlyList<string?> operands, int lineNumber, List<DiagnosticMessage> diagnostics)
+    public GpssBlock? Build(GpssStatement statement, List<DiagnosticMessage> diagnostics)
     {
-        if (operands.Count == 0 || operands[0] is null)
+        if (statement.Operands.Count == 0 || statement.Operands[0] is null)
         {
             diagnostics.Add(new DiagnosticMessage(DiagnosticSeverity.Error,
-                $"Line {lineNumber}: {GenerateBlock.Keyword} requires operand A (mean inter-arrival time)."));
+                $"{GenerateBlock.Keyword} requires operand A (mean inter-arrival time).", statement));
             return null;
         }
 
-        var mean = OperandParsing.ParseIntExpr(operands[0]!, lineNumber, "A", diagnostics);
+        var mean = OperandParsing.ParseIntExpr(statement, statement.Operands[0]!, "A", diagnostics);
         if (mean is null) return null;
 
+        var interArrivalTime = OperandParsing.VariateFrom(statement, mean, 1, "B", diagnostics);
+
         return new GenerateBlock(
-            mean,
-            OperandParsing.Operand(operands, 1, lineNumber, "B", diagnostics),
-            OperandParsing.Operand(operands, 2, lineNumber, "C", diagnostics),
-            OperandParsing.Operand(operands, 3, lineNumber, "D", diagnostics),
-            OperandParsing.Operand(operands, 4, lineNumber, "E", diagnostics))
-        { Label = label };
+            interArrivalTime,
+            OperandParsing.Operand(statement, 2, "C", diagnostics),
+            OperandParsing.Operand(statement, 3, "D", diagnostics),
+            OperandParsing.Operand(statement, 4, "E", diagnostics))
+        { Label = statement.Label, Description = statement.Comment };
     }
 }

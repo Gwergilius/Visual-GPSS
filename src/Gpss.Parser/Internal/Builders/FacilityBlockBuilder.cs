@@ -13,24 +13,22 @@ internal static class FacilityBlockBuilder
 {
     /// <summary>Builds a facility-style block from operand A (the symbolic name).</summary>
     /// <typeparam name="TBlock">The concrete block type to produce.</typeparam>
-    /// <param name="label">Optional block label.</param>
-    /// <param name="operands">Parsed operand tokens.</param>
-    /// <param name="lineNumber">1-based source line number, used in diagnostic messages.</param>
+    /// <param name="statement">The decoded statement being built.</param>
     /// <param name="diagnostics">Collector for parse errors.</param>
     /// <param name="factory">Creates the block from operand A (the symbolic name).</param>
     /// <returns>The built block, or <see langword="null"/> when operand A is missing.</returns>
     internal static TBlock? Build<TBlock>(
-        string? label, IReadOnlyList<string?> operands, int lineNumber,
-        List<DiagnosticMessage> diagnostics, Func<string, TBlock> factory)
+        GpssStatement statement, List<DiagnosticMessage> diagnostics, Func<string, TBlock> factory)
         where TBlock : GpssBlock, IKnownGpssBlock
     {
-        if (operands.Count == 0 || operands[0] is null)
+        if (statement.Operands.Count == 0 || statement.Operands[0] is null)
         {
             diagnostics.Add(new DiagnosticMessage(DiagnosticSeverity.Error,
-                $"Line {lineNumber}: {TBlock.Keyword} requires operand A (facility name)."));
+                $"{TBlock.Keyword} requires operand A (facility name).", statement));
             return null;
         }
 
-        return (TBlock)((GpssBlock)factory(operands[0]!) with { Label = label });
+        return (TBlock)((GpssBlock)factory(statement.Operands[0]!)
+            with { Label = statement.Label, Description = statement.Comment });
     }
 }

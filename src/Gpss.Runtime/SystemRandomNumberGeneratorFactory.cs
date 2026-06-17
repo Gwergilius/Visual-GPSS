@@ -1,3 +1,5 @@
+using Gpss.Model.Variates;
+
 namespace Gpss.Runtime;
 
 /// <summary>
@@ -20,8 +22,13 @@ public sealed class SystemRandomNumberGeneratorFactory : IRandomNumberGeneratorF
     public SystemRandomNumberGeneratorFactory(int seed) => _seed = seed;
 
     /// <inheritdoc/>
-    public IRandomVariateGenerator CreateUniform(int stream = 1) =>
-        new UniformRandomVariateGenerator(GetOrCreateStream(stream));
+    public IRandomVariateGenerator Create(VariateSpec spec, int stream = 1) =>
+        spec switch
+        {
+            UniformVariateSpec u => new UniformRandomVariateGenerator(GetOrCreateStream(stream), u.Mean, u.Spread),
+            ConstantVariateSpec c => new ConstantRandomVariateGenerator(c.Value),
+            _ => throw new NotSupportedException($"Variate spec '{spec.GetType().Name}' is not supported.")
+        };
 
     private IRandomNumberGenerator GetOrCreateStream(int stream)
     {

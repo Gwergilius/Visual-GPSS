@@ -28,8 +28,8 @@ internal sealed class QueueBlockBehaviour(ILogger<QueueBlockBehaviour> logger)
         queue.Enter(tx, context.Clock);
 
         logger.LogDebug(
-            "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} entered '{QueueName}'",
-            context.Clock, blockContext.Index, BN, tx.Id, queueName);
+            "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} entered '{QueueName}'{Description}",
+            context.Clock, blockContext.Index, BN, tx.Id, queueName, DescriptionSuffix(block));
 
         tx.BlockIndex = blockContext.Index + 1;
         return BlockTransactionResult.Moved;

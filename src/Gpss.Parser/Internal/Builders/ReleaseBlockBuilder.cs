@@ -4,14 +4,13 @@ using Gpss.Model.Expressions;
 
 namespace Gpss.Parser.Internal.Builders;
 
-/// <summary>Builds a <see cref="ReleaseBlock"/> from its label and operand tokens.</summary>
+/// <summary>Builds a <see cref="ReleaseBlock"/> from its parsed source statement.</summary>
 internal sealed class ReleaseBlockBuilder : IBlockBuilder
 {
     /// <inheritdoc/>
     public Type BlockType => typeof(ReleaseBlock);
 
     /// <inheritdoc/>
-    public GpssBlock? Build(string? label, IReadOnlyList<string?> operands, int lineNumber, List<DiagnosticMessage> diagnostics) =>
-        FacilityBlockBuilder.Build(label, operands, lineNumber, diagnostics,
-            name => new ReleaseBlock(new SymbolExpression(name)));
+    public GpssBlock? Build(GpssStatement statement, List<DiagnosticMessage> diagnostics) =>
+        FacilityBlockBuilder.Build(statement, diagnostics, name => new ReleaseBlock(new SymbolExpression(name)));
 }

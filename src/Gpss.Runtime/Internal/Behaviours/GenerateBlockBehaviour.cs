@@ -23,12 +23,10 @@ internal sealed class GenerateBlockBehaviour(ILogger<GenerateBlockBehaviour> log
     /// <inheritdoc/>
     protected override void OnSimulationStart(GenerateBlock block, BlockContext blockContext, ISimulationContext context)
     {
-        var variate = randomFactory.CreateUniform();
-        var mean = Evaluate(block.MeanInterArrivalTime);
-        var spread = block.Spread is not null ? Evaluate(block.Spread) : 0.0;
+        var variate = randomFactory.Create(block.InterArrivalTime);
         var firstOffset = block.FirstTransactionOffset is not null
             ? Evaluate(block.FirstTransactionOffset)
-            : variate.Sample(mean, spread);
+            : variate.Sample();
         var limit = block.GenerationLimit is not null ? (long)Evaluate(block.GenerationLimit) : 0L;
 
         blockContext.State = new State(limit, variate);
@@ -37,8 +35,8 @@ internal sealed class GenerateBlockBehaviour(ILogger<GenerateBlockBehaviour> log
         context.ScheduleTransaction(tx, firstOffset);
 
         logger.LogDebug(
-            "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} → FEC t={ScheduledTime:F0}",
-            context.Clock, blockContext.Index, BN, tx.Id, firstOffset);
+            "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} → FEC t={ScheduledTime:F0}{Description}",
+            context.Clock, blockContext.Index, BN, tx.Id, firstOffset, DescriptionSuffix(block));
     }
 
     /// <inheritdoc/>
@@ -48,8 +46,6 @@ internal sealed class GenerateBlockBehaviour(ILogger<GenerateBlockBehaviour> log
         var state = (State)blockContext.State!;
         state.GenerationCount++;
 
-        var mean = Evaluate(block.MeanInterArrivalTime);
-        var spread = block.Spread is not null ? Evaluate(block.Spread) : 0.0;
         var limit = state.Limit;
 
         context.RecordTransactionCreated();
@@ -57,18 +53,18 @@ internal sealed class GenerateBlockBehaviour(ILogger<GenerateBlockBehaviour> log
         if (limit == 0 || state.GenerationCount < limit)
         {
             var nextTx = context.CreateTransaction(blockContext.Index);
-            var nextTime = context.Clock + state.Variate.Sample(mean, spread);
+            var nextTime = context.Clock + state.Variate.Sample();
             context.ScheduleTransaction(nextTx, nextTime);
 
             logger.LogDebug(
-                "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} activated; #{NextId} → FEC t={NextTime:F0}",
-                context.Clock, blockContext.Index, BN, tx.Id, nextTx.Id, nextTime);
+                "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} activated; #{NextId} → FEC t={NextTime:F0}{Description}",
+                context.Clock, blockContext.Index, BN, tx.Id, nextTx.Id, nextTime, DescriptionSuffix(block));
         }
         else
         {
             logger.LogDebug(
-                "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} activated (generation limit reached)",
-                context.Clock, blockContext.Index, BN, tx.Id);
+                "{SimTime,5:F0} [{BlockIndex}]{BlockName}: tx #{TxId} activated (generation limit reached){Description}",
+                context.Clock, blockContext.Index, BN, tx.Id, DescriptionSuffix(block));
         }
 
         tx.BlockIndex = blockContext.Index + 1;
