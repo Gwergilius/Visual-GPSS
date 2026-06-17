@@ -16,12 +16,14 @@ services:
     container_name: gpss-seq
     environment:
       - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_NOAUTHENTICATION=true
     ports:
       - "5341:5341"   # Serilog HTTP ingestion — conflicts if another Seq is already running
       - "8081:80"     # Seq web UI
     volumes:
       - seq-data:/data
-    restart: unless-stopped
+    # restart: unless-stopped
+    restart: on-failure:3
 
 volumes:
   seq-data:
