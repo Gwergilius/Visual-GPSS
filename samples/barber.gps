@@ -1,0 +1,14 @@
+; Visual GPSS Sample File - Barber.GPSS
+*********************************************************************
+*                                                                   *
+*   Barber Shop Simulation                                          *
+*                                                                   *
+*********************************************************************
+
+    GENERATE    300, 100        ; Create next customer
+    QUEUE       BarberQueue     ; Begin queue time
+    SEIZE       Barber          ; Own or wait for Barber
+    DEPART      BarberQueue     ; End queue time
+    ADVANCE     400, 200        ; Haircut takes a few minutes.
+    RELEASE     Barber          ; Haircut done. Give up the Barber
+    TERMINATE   1               ; Customer leaves

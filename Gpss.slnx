@@ -1,0 +1,34 @@
+<Solution>
+    <Folder Name="/src/">
+        <Project Path="src/Gpss.Cli/Gpss.Cli.csproj" />
+        <Project Path="src/Gpss.Contracts/Gpss.Contracts.csproj" />
+        <Project Path="src/Gpss.Model/Gpss.Model.csproj" />
+        <Project Path="src/Gpss.Parser/Gpss.Parser.csproj" />
+        <Project Path="src/Gpss.Runtime/Gpss.Runtime.csproj" />
+    </Folder>
+    <Folder Name="/tests/">
+        <Project Path="tests/Gpss.Model.Tests/Gpss.Model.Tests.csproj" />
+        <Project Path="tests/Gpss.Parser.Tests/Gpss.Parser.Tests.csproj" />
+        <Project Path="tests/Gpss.Runtime.Tests/Gpss.Runtime.Tests.csproj" />
+    </Folder>
+    <!-- Solution Items -->
+<!--
+    <Folder Name="/Solution Items/">
+        <File Path="Directory.Packages.props" />
+    </Folder>
+-->
+
+    <!-- List of Projects -->
+<!--
+    <Project Path="ADD_PROJECT_FILE_1_RELATIVE_PATH_HERE" />
+    <Project Path="ADD_PROJECT_FILE_2_RELATIVE_PATH_HERE">
+        <Configuration />
+        <Deploy />
+    </Project>
+-->
+
+    <!-- Support is provisionally available on Visual Studio 17.10 and later versions. -->
+    <Properties Name="Visual Studio">
+        <Property Name="OpenWith" Value="17" />
+    </Properties>
+</Solution>

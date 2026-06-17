@@ -16,6 +16,10 @@ Recreate and modernize the GPSS ecosystem by delivering:
 - Project documentation: English.
 - Source code, identifiers, and code comments: English.
 
+## Repository Standards
+
+- Every repository must have a `.gitattributes` file that normalizes all text files to LF (`* text=auto eol=lf`). Windows scripts (`.bat`, `.cmd`, `.ps1`) are the only exception and use CRLF. Binary files must be marked `binary`.
+
 ## Runtime and Language Baseline
 
 - Target the latest development baseline.
@@ -27,6 +31,8 @@ Recreate and modernize the GPSS ecosystem by delivering:
 - Unit testing framework: xUnit.
 - Integration testing framework: Reqnroll.
 - E2E testing framework: Reqnroll.
+- Use Shouldly for all assertions (`value.ShouldBe(expected)`, `value.ShouldBeNull()`, etc.) — never use `xUnit.Assert` directly.
+- Prefer `[Theory, InlineData(...)]` over `[Fact]` for tests that instantiate objects with values; add multiple `InlineData` rows to cover representative inputs and boundaries. Use `[Fact]` only when there is genuinely no parameterizable data.
 
 ## Architectural Priorities
 
@@ -40,3 +46,4 @@ Recreate and modernize the GPSS ecosystem by delivering:
 - Add tests for every new runtime behavior.
 - Document unsupported GPSS features explicitly.
 - Prefer small, reviewable increments over large refactors.
+- Every type and member that is not `private` must have XML documentation (`<summary>` at minimum). This covers `public`, `protected`, `internal`, `protected internal`, and `private protected` types and members. `internal` members are included because they may be exposed to other assemblies via `[InternalsVisibleTo]` (e.g., test projects), and because XML documentation is a general best practice regardless of visibility. Use `<param>`, `<returns>`, `<remarks>`, and `<see cref>` where they add clarity. One-line summaries are fine; avoid padding.

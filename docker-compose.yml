@@ -1,0 +1,29 @@
+# Local development infrastructure
+#
+# NOTE: If a Seq server is already running on your machine (e.g. port 5341),
+# do NOT start this compose file — use that existing instance instead.
+# The appsettings.json points to http://localhost:5341 by default.
+#
+# Usage (only when no other Seq is running):
+#   docker compose up -d
+#
+# Seq UI:        http://localhost:8081
+# Seq ingestion: http://localhost:5341
+
+services:
+  seq:
+    image: datalust/seq:latest
+    container_name: gpss-seq
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_NOAUTHENTICATION=true
+    ports:
+      - "5341:5341"   # Serilog HTTP ingestion — conflicts if another Seq is already running
+      - "8081:80"     # Seq web UI
+    volumes:
+      - seq-data:/data
+    # restart: unless-stopped
+    restart: on-failure:3
+
+volumes:
+  seq-data:
