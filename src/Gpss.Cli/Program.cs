@@ -25,7 +25,7 @@ if (!File.Exists(filePath))
 
 var source = File.ReadAllText(filePath);
 
-var host = Host.CreateDefaultBuilder(args[1..])
+using var host = Host.CreateDefaultBuilder(args[1..])
     .UseContentRoot(AppContext.BaseDirectory)
     .UseSerilog((ctx, _, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration))
     .ConfigureServices((ctx, services) => Startup.ConfigureServices(services, ctx.Configuration))
