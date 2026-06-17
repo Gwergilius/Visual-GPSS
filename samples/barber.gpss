@@ -6,9 +6,9 @@
 *********************************************************************
 
     GENERATE    300, 100        ; Create next customer
-    QUEUE       Barber          ; Begin queue time
+    QUEUE       BarberQueue     ; Begin queue time
     SEIZE       Barber          ; Own or wait for Barber
-    DEPART      Barber          ; End queue time
-;   ADVANCE     400, 200        ; Haircut takes a few minutes.
+    DEPART      BarberQueue     ; End queue time
+    ADVANCE     400, 200        ; Haircut takes a few minutes.
     RELEASE     Barber          ; Haircut done. Give up the Barber
     TERMINATE   1               ; Customer leaves

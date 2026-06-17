@@ -71,6 +71,41 @@ public sealed class GpssParserTests
     }
 
     // -------------------------------------------------------------------------
+    // ADVANCE block
+    // -------------------------------------------------------------------------
+
+    [Theory, InlineData(400)]
+    public void Parse_AdvanceWithMeanOnly_SetsOperandA(int mean)
+    {
+        var result = Parser.Parse($"ADVANCE {mean}");
+
+        var block = result.Program!.Blocks[0].ShouldBeOfType<AdvanceBlock>();
+        block.MeanDelayTime.ShouldBeOfType<IntegerExpression>().Value.ShouldBe(mean);
+        block.Spread.ShouldBeNull();
+    }
+
+    [Theory, InlineData(400, 200)]
+    public void Parse_AdvanceWithSpread_SetsOperandB(int mean, int spread)
+    {
+        var result = Parser.Parse($"ADVANCE {mean},{spread}");
+
+        var block = result.Program!.Blocks[0].ShouldBeOfType<AdvanceBlock>();
+        block.MeanDelayTime.ShouldBeOfType<IntegerExpression>().Value.ShouldBe(mean);
+        block.Spread.ShouldBeOfType<IntegerExpression>().Value.ShouldBe(spread);
+    }
+
+    [Fact]
+    public void Parse_AdvanceWithNoOperand_OperandsAreNull()
+    {
+        var result = Parser.Parse("ADVANCE");
+
+        result.Success.ShouldBeTrue();
+        var block = result.Program!.Blocks[0].ShouldBeOfType<AdvanceBlock>();
+        block.MeanDelayTime.ShouldBeNull();
+        block.Spread.ShouldBeNull();
+    }
+
+    // -------------------------------------------------------------------------
     // TERMINATE block
     // -------------------------------------------------------------------------
 

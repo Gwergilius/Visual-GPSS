@@ -136,6 +136,47 @@ public sealed class SimulationEngineTests
     }
 
     // -------------------------------------------------------------------------
+    // ADVANCE
+    // -------------------------------------------------------------------------
+
+    [Theory]
+    [InlineData(1, 50.0)]
+    [InlineData(3, 70.0)]
+    [InlineData(5, 90.0)]
+    public void Run_Advance_DelaysTransactionBeforeContinuing(
+        long terminationCount, double expectedEndTime)
+    {
+        // GENERATE (mean=10) → ADVANCE (delay=40) → TERMINATE: the N-th transaction
+        // terminates at N*10 + 40
+        var program = new GpssProgram([
+            new GenerateBlock(new IntegerExpression(10)),
+            new AdvanceBlock(new IntegerExpression(40)),
+            new TerminateBlock(new IntegerExpression(1))
+        ]);
+
+        var result = CreateEngine(terminationCount).Run(program);
+
+        result.Success.ShouldBeTrue();
+        result.Statistics.SimulationEndTime.ShouldBe(expectedEndTime);
+        result.Statistics.TotalTransactionsTerminated.ShouldBe(terminationCount);
+    }
+
+    [Theory, InlineData(1)]
+    public void Run_AdvanceWithoutOperand_NoDelayIsApplied(long terminationCount)
+    {
+        var program = new GpssProgram([
+            new GenerateBlock(new IntegerExpression(10)),
+            new AdvanceBlock(),
+            new TerminateBlock(new IntegerExpression(1))
+        ]);
+
+        var result = CreateEngine(terminationCount).Run(program);
+
+        result.Success.ShouldBeTrue();
+        result.Statistics.SimulationEndTime.ShouldBe(10.0);
+    }
+
+    // -------------------------------------------------------------------------
     // QUEUE / DEPART (statistical blocks — no flow delay)
     // -------------------------------------------------------------------------
 
