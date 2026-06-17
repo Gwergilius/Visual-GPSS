@@ -2,13 +2,15 @@ using Gpss.Contracts;
 using Gpss.Model.Blocks;
 using Gpss.Model.Expressions;
 using Gpss.Parser;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace Gpss.Parser.Tests;
 
 public sealed class GpssParserTests
 {
-    private static readonly GpssParser Parser = new();
+    private static readonly GpssParser Parser =
+        new ServiceCollection().AddGpssParser().BuildServiceProvider().GetRequiredService<GpssParser>();
 
     // -------------------------------------------------------------------------
     // Minimal demo program

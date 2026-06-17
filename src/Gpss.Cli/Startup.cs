@@ -18,7 +18,7 @@ public static class Startup
     public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<SimulationOptions>(configuration.GetSection("Simulation"));
-        services.AddSingleton<GpssParser>();
+        services.AddGpssParser();
         services.AddGpssRuntime();
     }
 }
