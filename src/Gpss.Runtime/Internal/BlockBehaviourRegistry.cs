@@ -15,8 +15,20 @@ internal sealed class BlockBehaviourRegistry
     /// Initialises the registry from all registered <see cref="IBlockBehaviour"/> instances.
     /// </summary>
     /// <param name="behaviours">All behaviour implementations provided by DI.</param>
-    internal BlockBehaviourRegistry(IEnumerable<IBlockBehaviour> behaviours) =>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when <see cref="KnownGpssBlocks"/> lists a block type for which no
+    /// <see cref="IBlockBehaviour"/> was supplied, i.e. the parser and runtime have drifted out of sync.
+    /// </exception>
+    internal BlockBehaviourRegistry(IEnumerable<IBlockBehaviour> behaviours)
+    {
         _behaviours = behaviours.ToDictionary(b => b.BlockType);
+
+        var missing = KnownGpssBlocks.ByName.Values.Where(t => !_behaviours.ContainsKey(t)).ToArray();
+        if (missing.Length > 0)
+            throw new InvalidOperationException(
+                $"No behaviour registered for known block type(s): {string.Join(", ", missing.Select(t => t.Name))}. " +
+                "Every block listed in KnownGpssBlocks must have a corresponding IBlockBehaviour implementation.");
+    }
 
     /// <summary>
     /// Returns the behaviour registered for the type of <paramref name="block"/>.

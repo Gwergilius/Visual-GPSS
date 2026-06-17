@@ -16,4 +16,8 @@ namespace Gpss.Model.Blocks;
 public sealed record AdvanceBlock(
     GpssExpression? MeanDelayTime = null,
     GpssExpression? Spread = null
-) : GpssBlock();
+) : GpssBlock(), IKnownGpssBlock
+{
+    /// <inheritdoc/>
+    public static string Keyword => typeof(AdvanceBlock).DefaultGpssKeyword;
+}

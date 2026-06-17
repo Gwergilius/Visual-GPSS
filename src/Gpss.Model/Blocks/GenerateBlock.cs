@@ -32,4 +32,8 @@ public sealed record GenerateBlock(
     GpssExpression? FirstTransactionOffset = null,
     GpssExpression? GenerationLimit = null,
     GpssExpression? Priority = null
-) : GpssBlock();
+) : GpssBlock(), IKnownGpssBlock
+{
+    /// <inheritdoc/>
+    public static string Keyword => typeof(GenerateBlock).DefaultGpssKeyword;
+}

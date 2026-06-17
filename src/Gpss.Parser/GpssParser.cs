@@ -15,16 +15,10 @@ namespace Gpss.Parser;
 /// </code>
 /// Lines that are empty, whitespace-only, or begin with <c>;</c> (inline) or <c>*</c> (full-line) are ignored.
 /// The <c>END</c> statement terminates parsing; further lines are not processed.
-/// Currently recognised block names: <c>GENERATE</c>, <c>ADVANCE</c>, <c>TERMINATE</c>, <c>SEIZE</c>, <c>RELEASE</c>, <c>QUEUE</c>, <c>DEPART</c>.
+/// Recognised block names are listed in <see cref="KnownGpssBlocks"/>.
 /// </remarks>
 public sealed class GpssParser
 {
-    private static readonly IReadOnlySet<string> KnownBlockNames =
-        new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "GENERATE", "ADVANCE", "TERMINATE", "SEIZE", "RELEASE", "QUEUE", "DEPART"
-        };
-
     /// <summary>
     /// Parses <paramref name="sourceText"/> and returns a <see cref="GpssParseResult"/>.
     /// </summary>
@@ -104,7 +98,7 @@ public sealed class GpssParser
             : new GpssParseResult(new GpssProgram(blocks), diagnostics);
     }
 
-    private static bool IsBlockName(string token) => KnownBlockNames.Contains(token);
+    private static bool IsBlockName(string token) => KnownGpssBlocks.IsKnown(token);
 
     /// <summary>
     /// Splits a comma-delimited operand string into individual operand strings.

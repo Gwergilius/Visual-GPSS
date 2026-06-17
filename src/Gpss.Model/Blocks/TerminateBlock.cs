@@ -12,4 +12,8 @@ namespace Gpss.Model.Blocks;
 /// </param>
 public sealed record TerminateBlock(
     GpssExpression? DecrementCount = null
-) : GpssBlock();
+) : GpssBlock(), IKnownGpssBlock
+{
+    /// <inheritdoc/>
+    public static string Keyword => typeof(TerminateBlock).DefaultGpssKeyword;
+}

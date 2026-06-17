@@ -15,4 +15,8 @@ namespace Gpss.Model.Blocks;
 public sealed record QueueBlock(
     GpssExpression QueueName,
     GpssExpression? Count = null
-) : GpssBlock();
+) : GpssBlock(), IKnownGpssBlock
+{
+    /// <inheritdoc/>
+    public static string Keyword => typeof(QueueBlock).DefaultGpssKeyword;
+}

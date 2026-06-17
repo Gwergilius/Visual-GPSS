@@ -9,4 +9,8 @@ namespace Gpss.Model.Blocks;
 /// Corresponds to the GPSS RELEASE block (operand A: facility name).
 /// </summary>
 /// <param name="FacilityName">Operand A. Symbolic name of the Facility to release.</param>
-public sealed record ReleaseBlock(GpssExpression FacilityName) : GpssBlock();
+public sealed record ReleaseBlock(GpssExpression FacilityName) : GpssBlock(), IKnownGpssBlock
+{
+    /// <inheritdoc/>
+    public static string Keyword => typeof(ReleaseBlock).DefaultGpssKeyword;
+}
